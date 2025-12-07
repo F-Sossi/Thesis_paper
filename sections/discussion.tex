@@ -1,0 +1,171 @@
+% Chapter 5: Discussion
+% CLAUDE EDIT: New discussion chapter 2025-12-07
+
+This chapter interprets our experimental findings, explaining the underlying causes of observed performance patterns and providing practical recommendations.
+
+\section{Why Scale Control Matters}
+
+Our experiments demonstrate that scale control yields dramatic improvements: +39\% relative for SIFT-family descriptors and +21\% relative for CNN descriptors. We attribute this to several factors:
+
+\subsection{Information Content}
+
+Larger-scale keypoints capture patches containing more pixels:
+\begin{itemize}
+    \item A 4-pixel scale keypoint samples approximately a 16$\times$16 pixel region
+    \item A 10-pixel scale keypoint samples approximately a 40$\times$40 pixel region
+    \item Larger regions contain more distinctive texture and edge information
+\end{itemize}
+
+\subsection{Aliasing and Noise}
+
+Small-scale keypoints are more susceptible to:
+\begin{itemize}
+    \item \textbf{Aliasing}: High-frequency content that violates Nyquist sampling
+    \item \textbf{Noise sensitivity}: Small patches have lower signal-to-noise ratio
+    \item \textbf{Localization error}: Sub-pixel errors have greater relative impact
+\end{itemize}
+
+\subsection{Practical Recommendation}
+
+For production systems requiring high matching accuracy, we recommend filtering to the top 25\% of keypoints by scale. The trade-off is reduced keypoint count (645K vs 2.5M in our experiments), but the quality improvement substantially outweighs the coverage reduction.
+
+\section{Understanding Fusion Failures}
+
+\subsection{Distribution Incompatibility}
+
+Our analysis reveals that SIFT+CNN fusion fails due to fundamental distribution incompatibility (Figure~\ref{fig:distributions}):
+
+\begin{table}[h]
+\centering
+\caption{Descriptor distribution comparison}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Descriptor} & \textbf{Range} & \textbf{Mean} \\
+\midrule
+SIFT & [0, 0.3] & 0.05 \\
+HardNet & [-0.3, +0.3] & 0.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+When averaging a SIFT value $s \approx 0.05$ with a HardNet value $h \approx 0$:
+\begin{equation}
+    \text{avg} = \frac{s + h}{2} \approx 0.025
+\end{equation}
+
+The result is shifted from the zero-centered HardNet distribution, effectively corrupting the learned representation.
+
+\subsection{Fusion Contribution Analysis}
+
+% Reference to fusion_contribution_analysis.png
+Our correlation analysis shows that in SIFT+HardNet fusion:
+\begin{itemize}
+    \item HardNet correlates 0.9 with the fused descriptor
+    \item SIFT correlates only 0.4 with the fused descriptor
+\end{itemize}
+
+This asymmetry indicates that averaging does not produce a balanced combination---SIFT's non-negative values shift the mean, corrupting HardNet's zero-centered representation.
+
+\subsection{Why Concatenation Also Fails for SIFT+CNN}
+
+Even concatenation produces degraded results (71.4\% vs 78.1\% HardNet alone). This occurs because:
+\begin{enumerate}
+    \item L2 distance weights all dimensions equally
+    \item SIFT dimensions (always positive) contribute large positive values
+    \item HardNet dimensions (centered at zero) contribute smaller absolute values
+    \item SIFT effectively dominates the distance calculation
+\end{enumerate}
+
+\section{Why CNN+CNN Fusion Succeeds}
+
+HardNet+SOSNet concatenation achieves 93.4\% mAP, improving upon either descriptor alone. We attribute this success to:
+
+\subsection{Distribution Compatibility}
+
+Both descriptors are:
+\begin{itemize}
+    \item Zero-centered (mean $\approx$ 0)
+    \item Similar value ranges ([-0.3, +0.3])
+    \item L2-normalized
+\end{itemize}
+
+This compatibility ensures that averaging or concatenation produces meaningful combinations.
+
+\subsection{Complementary Features}
+
+Despite similar training methodologies, HardNet and SOSNet learn slightly different representations:
+\begin{itemize}
+    \item \textbf{HardNet}: Trained with hard negative mining, focuses on discriminative features
+    \item \textbf{SOSNet}: Incorporates second-order similarity, captures different geometric relationships
+\end{itemize}
+
+Concatenation preserves both representations, allowing the matcher to utilize all available information.
+
+\subsection{Why Concatenation Outperforms Averaging}
+
+Concatenation (+0.5\%) outperforms averaging (-0.6\%) because:
+\begin{enumerate}
+    \item Averaging collapses 256 dimensions of information into 128
+    \item Complementary features may be lost in averaging
+    \item Concatenation preserves full information from both descriptors
+\end{enumerate}
+
+\section{Detector Agreement as Quality Signal}
+
+Keypoints detected by both SIFT and KeyNet (spatial intersection) achieve higher performance than either detector alone:
+\begin{itemize}
+    \item HardNet on full KeyNet: 64.5\% mAP
+    \item HardNet on intersection: 82.1\% mAP (+17.6\%)
+\end{itemize}
+
+This improvement suggests that detector agreement provides a quality signal: keypoints found by both methods likely correspond to genuinely salient image features, while keypoints found by only one detector may represent detector-specific artifacts.
+
+\section{HP-V vs HP-I Patterns}
+
+\subsection{Traditional vs Learned Preferences}
+
+Our results show opposite patterns:
+\begin{itemize}
+    \item \textbf{Traditional descriptors}: HP-V $>$ HP-I (better on viewpoint changes)
+    \item \textbf{CNN descriptors}: HP-I $>$ HP-V (better on illumination changes)
+\end{itemize}
+
+\subsection{Explanation}
+
+CNN descriptors are trained on patches with photometric augmentations (brightness, contrast, gamma), leading to learned illumination invariance. Traditional descriptors rely on gradient directions, which are naturally invariant to multiplicative illumination changes but not to more complex photometric transformations.
+
+\section{Limitations}
+
+\subsection{Dataset Scope}
+
+Our experiments use only the HPatches benchmark. While HPatches is a standard evaluation dataset, results may not generalize to:
+\begin{itemize}
+    \item Extreme viewpoint changes ($>$ 60 degrees)
+    \item Significant scale differences between images
+    \item Different image domains (medical, satellite, etc.)
+\end{itemize}
+
+\subsection{Computational Considerations}
+
+Concatenation doubles descriptor dimensionality (128D to 256D), increasing:
+\begin{itemize}
+    \item Memory requirements
+    \item Matching time (linear in dimensionality for brute-force)
+    \item Index size for approximate nearest neighbor methods
+\end{itemize}
+
+For real-time applications, this overhead may be prohibitive.
+
+\subsection{Detector Dependency}
+
+Our best results use KeyNet for CNN descriptors. The findings may not transfer to other detector choices (e.g., SuperPoint's built-in detector).
+
+\section{Summary of Insights}
+
+\begin{enumerate}
+    \item \textbf{Scale matters more than descriptor choice}: A 39\% improvement from scale control exceeds most algorithmic improvements
+    \item \textbf{Distribution compatibility is essential}: SIFT+CNN fusion fails due to incompatible value distributions
+    \item \textbf{Concatenation $>$ averaging}: Preserving full information outperforms lossy aggregation
+    \item \textbf{Detector agreement filters quality}: Intersection keypoints are more reliable than single-detector keypoints
+    \item \textbf{CNN+CNN fusion works}: When distributions are compatible, complementary features improve performance
+\end{enumerate}

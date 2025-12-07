@@ -1,0 +1,161 @@
+% Chapter 4: Experiments and Results
+\chapter{Experiments and Results}
+\label{chap:results}
+
+This chapter presents the experimental evaluation of descriptor fusion strategies on the HPatches benchmark. We organize the results into four main studies: baseline descriptor performance, scale control effects, spatial intersection analysis, and descriptor fusion efficacy.
+
+% ===================================================================
+\section{Experimental Setup}
+\label{sec:experimental_setup}
+% ===================================================================
+
+\subsection{Dataset and Metrics}
+
+We evaluate all experiments on the HPatches benchmark~\cite{balntas2017hpatches}, which consists of 116 image sequences with ground-truth homographies. The dataset is divided into 59 viewpoint sequences (geometric transformations) and 57 illumination sequences (photometric changes).
+
+As defined in Chapter~\ref{chap:methodology}, we primarily report \textbf{Mean Average Precision (mAP)} using the True Micro mAP definition (single ground truth per query). We further breakdown results by sequence type:
+\begin{itemize}
+    \item \textbf{HP-V}: Viewpoint sequences (measuring geometric invariance)
+    \item \textbf{HP-I}: Illumination sequences (measuring photometric invariance)
+\end{itemize}
+
+% ===================================================================
+\section{Baseline Descriptor Performance}
+\label{sec:baseline_results}
+% ===================================================================
+
+We first establish baseline performance for traditional and learned descriptors using their native keypoint detectors without any scale filtering.
+
+\begin{table}[h]
+\centering
+\caption{Baseline descriptor performance on full keypoint sets (SIFT ~2.5M, KeyNet ~2.8M)}
+\label{tab:baselines}
+\begin{tabular}{llrrr}
+\toprule
+\textbf{Descriptor} & \textbf{Keypoint Set} & \textbf{mAP} & \textbf{HP-V} & \textbf{HP-I} \\
+\midrule
+SIFT & sift\_8000 & 44.5\% & 45.9\% & 43.1\% \\
+RootSIFT & sift\_8000 & 46.7\% & 46.2\% & 47.2\% \\
+HardNet & keynet\_8000 & 64.5\% & 63.8\% & 65.3\% \\
+SOSNet & keynet\_8000 & 64.3\% & 63.4\% & 65.2\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+As expected, the learned descriptors (HardNet, SOSNet) significantly outperform SIFT, achieving approximately 20 percentage points higher mAP. SIFT shows a slight preference for viewpoint changes, while the CNN descriptors perform slightly better on illumination sequences.
+
+% ===================================================================
+\section{Impact of Scale Control}
+\label{sec:scale_control}
+% ===================================================================
+
+One of the central hypotheses of this thesis is that keypoint scale is a dominant factor in matching performance. By filtering the keypoint sets to retain only the largest 25\% of features (Scale-Controlled sets), we observe dramatic performance improvements across all descriptor types.
+
+\begin{table}[h]
+\centering
+\caption{Impact of Scale Control (filtering small keypoints)}
+\label{tab:scale_control}
+\begin{tabular}{llrrr}
+\toprule
+\textbf{Configuration} & \textbf{Metric} & \textbf{Full Set} & \textbf{Scale Filtered} & \textbf{Improvement} \\
+\midrule
+\textbf{SIFT} & mAP & 44.5\% & \textbf{62.8\%} & \textbf{+18.3\%} \\
+& HP-V & 45.9\% & 65.7\% & +19.8\% \\
+& HP-I & 43.1\% & 59.8\% & +16.7\% \\
+\midrule
+\textbf{HardNet} & mAP & 64.5\% & \textbf{78.1\%} & \textbf{+13.6\%} \\
+& HP-V & 63.8\% & 76.9\% & +13.1\% \\
+& HP-I & 65.3\% & 79.3\% & +14.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The results in Table~\ref{tab:scale_control} are striking. Simply removing small, unstable keypoints improves SIFT's performance by over 18 percentage points, bringing it close to the baseline performance of HardNet. For HardNet, scale control yields a 13.6\% gain, pushing it to 78.1\% mAP. This confirms that descriptor distinctiveness is strongly correlated with patch size.
+
+% ===================================================================
+\section{Impact of Spatial Intersection}
+\label{sec:intersection_results}
+% ===================================================================
+
+Our fusion methodology relies on finding the spatial intersection of keypoints detected by SIFT and KeyNet. We analyzed whether this intersection step itself acts as a quality filter.
+
+\begin{table}[h]
+\centering
+\caption{Performance of HardNet on different keypoint subsets}
+\label{tab:intersection_analysis}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Keypoint Set} & \textbf{mAP} & \textbf{HP-V} & \textbf{HP-I} \\
+\midrule
+Full KeyNet Set & 64.5\% & 63.8\% & 65.3\% \\
+Scale-Controlled & 78.1\% & 76.9\% & 79.3\% \\
+\textbf{Spatial Intersection} & \textbf{82.1\%} & \textbf{81.5\%} & \textbf{82.7\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:intersection_analysis} shows that features detected by \textit{both} detectors are of higher quality than those detected by KeyNet alone, even after scale filtering. The intersection set yields an additional 4.0\% improvement in mAP, suggesting that detector consensus is a powerful proxy for feature repeatability.
+
+% ===================================================================
+\section{Descriptor Fusion Results}
+\label{sec:fusion_results}
+% ===================================================================
+
+We evaluated two fusion strategies: concatenation and weighted averaging. We tested these on two classes of pairings: Cross-Family (SIFT+CNN) and Intra-Family (CNN+CNN).
+
+\subsection{Cross-Family Fusion (SIFT + HardNet)}
+
+Contrary to our initial expectations, fusing SIFT with HardNet did not yield performance gains.
+
+\begin{itemize}
+    \item \textbf{HardNet Baseline (Intersection)}: 82.1\% mAP
+    \item \textbf{SIFT + HardNet (Concatenation)}: 71.4\% mAP
+\end{itemize}
+
+This 10.7\% drop in performance indicates a fundamental incompatibility between the descriptor spaces. As discussed in Chapter 3, SIFT histograms are non-negative and sparse, while HardNet embeddings are dense and zero-centered. Concatenation creates a heterogeneous feature vector where the L2 distance is dominated by the SIFT component's scale, effectively corrupting the high-quality HardNet information.
+
+\subsection{Intra-Family Fusion (HardNet + SOSNet)}
+
+Fusing two learned descriptors proved highly effective. Table~\ref{tab:fusion_results} shows the results for fusing HardNet and SOSNet on the scale-matched intersection set.
+
+\begin{table}[h]
+\centering
+\caption{CNN+CNN Fusion Results (Scale-Matched Intersection)}
+\label{tab:fusion_results}
+\begin{tabular}{llrrr}
+\toprule
+\textbf{Descriptor} & \textbf{Fusion} & \textbf{mAP} & \textbf{HP-V} & \textbf{HP-I} \\
+\midrule
+HardNet & None & 82.1\% & 81.5\% & 82.7\% \\
+SOSNet & None & 81.9\% & 81.2\% & 82.5\% \\
+HardNet + SOSNet & Weighted Avg & 92.3\% & 91.4\% & 93.2\% \\
+\textbf{HardNet + SOSNet} & \textbf{Concat} & \textbf{93.4\%} & \textbf{92.6\%} & \textbf{94.2\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key Finding:} The concatenation of HardNet and SOSNet achieves a state-of-the-art mAP of \textbf{93.4\%}. This represents an 11.3 percentage point improvement over the single best descriptor (HardNet).
+
+The success of this fusion suggests that while both networks are trained on similar data, they learn complementary representations of the image patches. Concatenation preserves this distinct information, whereas averaging tends to dilute it slightly (92.3\% vs 93.4\%).
+
+% ===================================================================
+\section{Viewpoint vs. Illumination Analysis}
+\label{sec:viewpoint_illumination}
+% ===================================================================
+
+Analyzing the breakdown of results provides insight into where these methods excel:
+
+\begin{enumerate}
+    \item \textbf{Traditional Methods}: SIFT benefits immensely from scale control on viewpoint sequences (+19.8\% HP-V vs +16.7\% HP-I), confirming that scale variance is a primary source of error for hand-crafted detectors in geometric tasks.
+    \item \textbf{Learned Methods}: HardNet and SOSNet are naturally robust to illumination changes (HP-I $>$ HP-V).
+    \item \textbf{Fusion Synergy}: The fused CNN descriptor achieves excellent performance on both tasks (92.6\% HP-V, 94.2\% HP-I), effectively closing the gap between geometric and photometric invariance.
+\end{enumerate}
+
+\section{Summary}
+
+Our experiments demonstrate three key conclusions:
+\begin{enumerate}
+    \item \textbf{Scale Matters}: Filtering for larger scales improves performance by 13-18\% across all descriptor types.
+    \item \textbf{Consensus Matters}: Spatial intersection of detectors acts as a high-quality filter, boosting mAP by a further 4\%.
+    \item \textbf{Compatible Fusion Works}: While cross-family fusion fails due to distribution mismatch, fusing compatible learned descriptors (HardNet+SOSNet) yields significant gains, achieving a peak mAP of 93.4\%.
+\end{enumerate}

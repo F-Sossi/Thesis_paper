@@ -1,0 +1,62 @@
+% Chapter 1: Introduction
+% CLAUDE EDIT: Complete rewrite 2025-12-07
+
+Local feature detection and description remain fundamental to many computer vision applications, including simultaneous localization and mapping (SLAM), structure-from-motion (SfM), image retrieval, and visual place recognition. Despite significant advances in end-to-end learned approaches, local feature methods remain competitive due to their interpretability, efficiency, and ability to handle wide-baseline matching.
+
+\section{Motivation}
+
+The computer vision community has developed two distinct families of local feature descriptors:
+
+\begin{itemize}
+    \item \textbf{Traditional descriptors} such as SIFT~\cite{dong2015domain}, SURF, and their variants rely on hand-crafted gradient histograms computed at keypoint locations detected by scale-space analysis.
+
+    \item \textbf{Learned descriptors} such as HardNet and SOSNet use convolutional neural networks trained on patch correspondence tasks, typically paired with learned detectors like KeyNet.
+\end{itemize}
+
+Each family has distinct characteristics. Traditional descriptors are well-understood, deterministic, and compute patches around keypoints detected at multiple scales. Learned descriptors achieve higher matching accuracy but are trained end-to-end with specific detector choices. A natural question arises: can we combine the complementary strengths of both families through descriptor fusion?
+
+\section{Research Questions}
+
+This thesis investigates the following research questions:
+
+\begin{enumerate}
+    \item \textbf{RQ1: Scale Impact.} How does keypoint scale distribution affect descriptor matching performance? Is larger scale universally better?
+
+    \item \textbf{RQ2: Detector Agreement.} Does spatial agreement between different keypoint detectors (SIFT and KeyNet) provide a quality signal for filtering unreliable keypoints?
+
+    \item \textbf{RQ3: Cross-Family Fusion.} Can traditional (SIFT) and learned (HardNet) descriptors be successfully fused? If not, why?
+
+    \item \textbf{RQ4: Fusion Strategy.} What fusion strategy (averaging vs. concatenation) works best, and under what conditions?
+\end{enumerate}
+
+\section{Contributions}
+
+This thesis makes the following contributions:
+
+\begin{enumerate}
+    \item \textbf{Scale Control Methodology.} We demonstrate that filtering keypoints by scale dramatically improves matching performance: +39\% relative for SIFT-family descriptors and +21\% relative for CNN descriptors. This finding suggests that keypoint quality is as important as descriptor algorithm choice.
+
+    \item \textbf{Spatial Intersection Algorithm.} We develop a mutual nearest neighbor algorithm for establishing 1-to-1 correspondence between keypoints from different detectors, enabling cross-detector descriptor fusion with configurable spatial tolerance.
+
+    \item \textbf{Distribution Incompatibility Analysis.} We identify and explain why SIFT+CNN descriptor fusion fails: the incompatible value distributions (non-negative versus zero-centered) cause averaging to destroy learned representations.
+
+    \item \textbf{Successful CNN Fusion.} We show that CNN+CNN fusion succeeds when distributions are compatible, achieving 93.4\% mAP with HardNet+SOSNet concatenation---the highest result in our study.
+
+    \item \textbf{DescriptorWorkbench Framework.} We develop an open-source evaluation framework implementing the image matching, keypoint verification, and keypoint retrieval metrics from Bojanic et al.~\cite{bojanic2020comparison}.
+\end{enumerate}
+
+\section{Thesis Organization}
+
+The remainder of this thesis is organized as follows:
+
+\begin{itemize}
+    \item \textbf{Chapter~\ref{chap:background}} reviews local feature detection and description, covering both traditional and learned approaches, as well as prior work on descriptor fusion.
+
+    \item \textbf{Chapter~\ref{chap:methodology}} describes our spatial intersection methodology, scale-matching strategy, and evaluation framework.
+
+    \item \textbf{Chapter~\ref{chap:results}} presents experimental results from 108 experiments on the HPatches benchmark, analyzing scale control, fusion strategies, and viewpoint/illumination breakdown.
+
+    \item \textbf{Chapter~\ref{chap:discussion}} interprets the results, explaining why certain fusion strategies succeed or fail based on distribution analysis.
+
+    \item \textbf{Chapter~\ref{chap:conclusion}} summarizes findings and discusses future work directions.
+\end{itemize}

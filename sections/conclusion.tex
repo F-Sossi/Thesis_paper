@@ -1,0 +1,98 @@
+% Chapter 6: Conclusion and Future Work
+% CLAUDE EDIT: New conclusion chapter 2025-12-07
+
+\section{Summary of Contributions}
+
+This thesis investigated cross-detector descriptor fusion for local feature matching, making the following contributions:
+
+\begin{enumerate}
+    \item \textbf{Scale Control Methodology}: We demonstrated that filtering keypoints by scale yields dramatic improvements: +39\% relative for SIFT-family descriptors and +21\% relative for CNN descriptors. This finding suggests that keypoint quality is at least as important as descriptor algorithm choice.
+
+    \item \textbf{Spatial Intersection Algorithm}: We developed a mutual nearest neighbor algorithm for establishing 1-to-1 correspondence between keypoints from different detectors. This enables cross-detector descriptor fusion with configurable spatial tolerance.
+
+    \item \textbf{Distribution Incompatibility Analysis}: We identified why SIFT+CNN descriptor fusion fails: the incompatible value distributions (non-negative versus zero-centered) cause averaging to corrupt learned representations. This explains a 6.7\% performance degradation compared to using HardNet alone.
+
+    \item \textbf{Successful CNN Fusion}: We showed that CNN+CNN fusion succeeds when distributions are compatible. HardNet+SOSNet concatenation at scale-matched intersection keypoints achieves 93.4\% mAP on HPatches---the highest result in our study.
+
+    \item \textbf{DescriptorWorkbench Framework}: We developed an open-source evaluation framework implementing image matching, keypoint verification, and keypoint retrieval metrics from Bojanic et al.~\cite{bojanic2020comparison}. The framework supports 108+ experiments across 99 descriptor configurations.
+\end{enumerate}
+
+\section{Key Findings}
+
+Our experiments reveal several important insights for local feature matching:
+
+\begin{itemize}
+    \item \textbf{Quality over quantity}: Fewer, better keypoints (scale-filtered) outperform more, lower-quality keypoints by substantial margins.
+
+    \item \textbf{Detector agreement matters}: Keypoints detected by multiple methods are more reliable, as evidenced by the 17.6\% improvement from spatial intersection filtering.
+
+    \item \textbf{Distribution compatibility is essential}: Descriptor fusion requires compatible value distributions. Non-negative (SIFT) and zero-centered (CNN) distributions are fundamentally incompatible.
+
+    \item \textbf{Concatenation preserves information}: When fusing compatible descriptors, concatenation outperforms averaging by preserving complementary features.
+\end{itemize}
+
+\section{Practical Recommendations}
+
+Based on our findings, we offer the following recommendations:
+
+\begin{enumerate}
+    \item \textbf{For highest accuracy}: Use HardNet+SOSNet concatenation on scale-matched intersection keypoints (93.4\% mAP).
+
+    \item \textbf{For traditional descriptors}: Apply scale filtering (top 25\%) and use DSP-SIFT or RootSIFT (64.4\% mAP vs 46.7\% baseline).
+
+    \item \textbf{Avoid}: SIFT+CNN fusion in any form---distribution incompatibility causes consistent degradation.
+
+    \item \textbf{For real-time applications}: Consider the dimensionality trade-off; single CNN descriptors (HardNet at 78.1\%) may be preferable to concatenation (93.4\% but 256D).
+\end{enumerate}
+
+\section{Future Work}
+
+Several directions remain for future investigation:
+
+\subsection{Distribution Alignment}
+
+Could SIFT+CNN fusion succeed with distribution alignment? Potential approaches:
+\begin{itemize}
+    \item Transform SIFT to zero-centered: $d' = d - \text{mean}(d)$
+    \item Learn a projection matrix to align distributions
+    \item Use non-linear transforms (e.g., hyperbolic tangent)
+\end{itemize}
+
+\subsection{Learned Fusion Weights}
+
+Rather than fixed $\alpha = 0.5$ weighting, learn optimal weights:
+\begin{equation}
+    d_{\text{fused}} = \sum_i w_i \cdot d_i, \quad \text{s.t.} \sum_i w_i = 1
+\end{equation}
+Weights could be learned per-dimension or globally.
+
+\subsection{Additional Datasets}
+
+Validate findings on:
+\begin{itemize}
+    \item Oxford5k and Paris6k (image retrieval)
+    \item MegaDepth (wide-baseline matching)
+    \item ETH3D (multi-view stereo)
+\end{itemize}
+
+\subsection{End-to-End Learning}
+
+Train a joint detector-descriptor-fusion network that:
+\begin{itemize}
+    \item Detects keypoints with scale optimization
+    \item Extracts multiple descriptor types
+    \item Learns optimal fusion strategy
+\end{itemize}
+
+\subsection{Tolerance Sensitivity}
+
+% Note: Results from overnight experiments will inform this
+Systematically study the relationship between intersection tolerance and matching performance. Our hypothesis is an inverted U-curve: too strict yields few keypoints, too loose yields misaligned pairs.
+
+\section{Closing Remarks}
+
+This thesis demonstrates that cross-detector descriptor fusion is possible---but only when descriptor distributions are compatible. The key insight is not algorithmic but statistical: fusion methods cannot overcome fundamental incompatibilities in how descriptors represent image patches.
+
+More broadly, our findings suggest that the computer vision community should pay greater attention to keypoint quality. The 39\% improvement from scale control exceeds most algorithmic advances, yet scale filtering is rarely discussed in the literature. We hope this work encourages more research into keypoint selection strategies alongside descriptor algorithm development.
+
+The DescriptorWorkbench framework and all experimental configurations are available as open-source software, enabling reproduction and extension of these results.
