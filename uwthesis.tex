@@ -14,6 +14,7 @@
 %  limitations under the License.
 %  ========================================================================
 %
+
 % Documentation for University of Washington thesis LaTeX document class
 % by Jim Fox
 % fox@washington.edu
@@ -36,19 +37,16 @@
 %    % --- sample stuff only -----
 %    special stuff for my document, but you don't need it in your thesis
 %    % --- end-of-sample-stuff ---
-%
+
+
 %    Printed in twoside style now that that's allowed
 %
  
 \documentclass [11pt, proquest] {uwthesis}[2020/02/24]
-
+ 
 %
-% The following line would print the thesis in a postscript font
+% The following line would print the thesis in a postscript font 
 
-% \usepackage{natbib}
-% \def\bibpreamble{\protect\addcontentsline{toc}{chapter}{Bibliography}}
-
-% CLAUDE EDIT: Added packages for tables and formatting 2025-12-07
 \usepackage{booktabs}     % Professional tables
 \usepackage{graphicx}     % For figures
 \usepackage{amsmath}      % Math equations
@@ -77,6 +75,9 @@
 \let\mffont=\sf
 % --- end-of-sample-stuff ---
  
+
+
+
 \begin{document}
  
 % ==========   Preliminary pages
@@ -103,63 +104,90 @@ Scale Control and Spatial Alignment for Local Feature Matching}
 
 \titlepage  
 
+ 
+%
+% ----- signature and quoteslip are gone
+%
+
 %
 % ----- abstract
 %
 
+
 \setcounter{page}{-1}
 \abstract{%
-% CLAUDE EDIT: Updated abstract 2025-12-07 to reflect actual research findings
 Local feature descriptors are fundamental to many computer vision applications including SLAM, structure-from-motion, and image retrieval. This thesis investigates the fusion of descriptors from different detector families---traditional (SIFT) and learned (KeyNet)---through spatial keypoint alignment.
 
 We present three main contributions. First, we demonstrate that keypoint scale control dramatically improves matching performance: filtering SIFT keypoints to the top 25\% by scale yields a 39\% relative improvement (17.7 absolute percentage points in mAP), while similar filtering for CNN descriptors yields 21\% relative improvement. Second, we identify and explain why classical-CNN descriptor fusion fails: the incompatible value distributions (non-negative SIFT versus zero-centered HardNet) cause averaging to destroy learned representations, resulting in 6.7\% degradation versus using HardNet alone. Third, we show that CNN-CNN fusion succeeds when distributions are compatible: concatenating HardNet and SOSNet descriptors at scale-matched intersection keypoints achieves 93.4\% mAP on the HPatches benchmark, the highest result in our study.
 
-Our spatial intersection methodology enables descriptor fusion by establishing 1-to-1 correspondence between keypoints from different detectors using mutual nearest neighbor matching with configurable tolerance. We develop DescriptorWorkbench, an open-source evaluation framework implementing the metrics from Bojanic et al. (2020), and conduct 108 experiments across 99 descriptor configurations. The results demonstrate that keypoint quality---scale and detector agreement---has greater impact on matching performance than the choice of fusion strategy.
+Our spatial intersection methodology enables descriptor fusion by establishing 1-to-1 correspondence between keypoints from different detectors using mutual nearest neighbor matching with configurable tolerance. We develop DescriptorWorkbench, an open-source evaluation framework implementing the metrics from Bojanic et al., and conduct 108 experiments across 99 descriptor configurations. The results demonstrate that keypoint quality---scale and detector agreement---has greater impact on matching performance than the choice of fusion strategy.
 }
-
+ 
+%
+% ----- contents & etc.
+%
 \tableofcontents
 \listoffigures
 \listoftables
+ 
+%
+% ----- acknowledgments
+%
+\acknowledgments{% \vskip2pc
+  % {\narrower\noindent
+  I would like to thank Professor Clark Olson for his guidance and support throughout this research.
+  % \par}
+}
+
+%
+% ----- dedication
+%
+% \dedication{\begin{center}to my dear wife, Joanna\end{center}}
+
+%
+% end of the preliminary pages
+ 
+ 
+ 
+%
+% ==========      Text pages
+%
 
 \textpages
-
-% ========== Begin Content Here ==========
-% CLAUDE EDIT: Restructured chapters 2025-12-07
-
-% Chapter 1: Introduction
+ 
+% ========== Chapter 1
 \chapter{Introduction}
 \label{chap:introduction}
 \input{sections/introduction}
 
-% Chapter 2: Background and Related Work
+% ========== Chapter 2
 \chapter{Background and Related Work}
 \label{chap:background}
 \input{sections/background}
 
-% Chapter 3: Methodology
+% ========== Chapter 3
 \chapter{Methodology}
 \label{chap:methodology}
 \input{sections/methodology_new}
 
-% Chapter 4: Experiments and Results
+% ========== Chapter 4
 \input{sections/results}
 
-% Chapter 5: Discussion
+% ========== Chapter 5
 \chapter{Discussion}
 \label{chap:discussion}
 \input{sections/discussion}
 
-% Chapter 6: Conclusion
+% ========== Chapter 6
 \chapter{Conclusion and Future Work}
 \label{chap:conclusion}
 \input{sections/conclusion}
 
-% ========== End of Content ==========
-
+%
 % ==========   Bibliography
 %
 \nocite{*}   % include everything in the uwthesis.bib file
-\bibliographystyle{IEEEannot}
+\bibliographystyle{plain}
 \bibliography{uwthesis}
 
 \end{document}
