@@ -7,7 +7,7 @@ This chapter reviews the foundations of local feature detection and description,
 
 \subsection{Traditional Detectors}
 
-The SIFT (Scale-Invariant Feature Transform) detector identifies keypoints by searching for scale-space extrema in a Difference-of-Gaussian (DoG) pyramid. Key characteristics include:
+The SIFT (Scale-Invariant Feature Transform) detector~\cite{lowe2004distinctive} identifies keypoints by searching for scale-space extrema in a Difference-of-Gaussian (DoG) pyramid. Key characteristics include:
 
 \begin{itemize}
     \item \textbf{Scale invariance}: Keypoints are detected across multiple octaves, with scale encoded in the keypoint metadata
@@ -15,11 +15,11 @@ The SIFT (Scale-Invariant Feature Transform) detector identifies keypoints by se
     \item \textbf{Sub-pixel localization}: Taylor expansion refines keypoint position
 \end{itemize}
 
-Other traditional detectors include Harris corners, FAST, and SURF, each with different trade-offs between repeatability and computational cost.
+Other traditional detectors include Harris corners, FAST, and SURF~\cite{bay2006surf}, each with different trade-offs between repeatability and computational cost.
 
 \subsection{Learned Detectors}
 
-KeyNet represents a hybrid approach combining hand-crafted and learned filters:
+KeyNet~\cite{barroso2019key} represents a hybrid approach combining hand-crafted and learned filters:
 
 \begin{itemize}
     \item \textbf{Handcrafted filters}: Provide anchor structure for stable detection
@@ -34,9 +34,9 @@ KeyNet was designed specifically for pairing with learned descriptors like HardN
 While KeyNet focuses on detection to be paired with separate descriptors, other approaches integrate detection and description into a single end-to-end trainable network:
 
 \begin{itemize}
-    \item \textbf{SuperPoint} (DeTone et al., 2018): A fully convolutional network trained using self-supervision. It employs a single shared encoder and two separate decoder heads for interest point detection and descriptor generation.
-    \item \textbf{LF-Net} (Ono et al., 2018): Learns local features without human supervision by optimizing a keypoint correspondence objective, enforcing geometry constraints across multi-view images.
-    \item \textbf{ALIKE} (Zhao et al., 2023): A lightweight framework that combines the strengths of handcrafted and learned methods, using a deformable transformation module to improve geometric invariance while maintaining high computational efficiency.
+    \item \textbf{SuperPoint}~\cite{detone2018superpoint}: A fully convolutional network trained using self-supervision. It employs a single shared encoder and two separate decoder heads for interest point detection and descriptor generation.
+    \item \textbf{LF-Net}~\cite{ono2018lf}: Learns local features without human supervision by optimizing a keypoint correspondence objective, enforcing geometry constraints across multi-view images.
+    \item \textbf{ALIKE}~\cite{zhao2023aliked}: A lightweight framework that combines the strengths of handcrafted and learned methods, using a deformable transformation module to improve geometric invariance while maintaining high computational efficiency.
 \end{itemize}
 
 These end-to-end methods offer a compelling alternative to the detect-then-describe pipeline, though they often require strictly coupled detector-descriptor pairs, unlike the mix-and-match flexibility we investigate with KeyNet and SIFT.
@@ -58,7 +58,7 @@ This scale difference has significant implications for descriptor quality, as la
 
 \subsubsection{SIFT Descriptor}
 
-The SIFT descriptor computes a 128-dimensional vector from a 16$\times$16 pixel patch:
+The SIFT descriptor~\cite{lowe2004distinctive} computes a 128-dimensional vector from a 16$\times$16 pixel patch:
 
 \begin{enumerate}
     \item Divide patch into 4$\times$4 grid of cells
@@ -71,7 +71,7 @@ The resulting descriptor is \textit{non-negative} with values typically in [0, 0
 
 \subsubsection{Domain-Size Pooling (DSP-SIFT)}
 
-Dong and Soatto introduced Domain-Size Pooling (DSP), which aggregates SIFT descriptors computed at multiple scales around each keypoint:
+Dong and Soatto~\cite{dong2015domain} introduced Domain-Size Pooling (DSP), which aggregates SIFT descriptors computed at multiple scales around each keypoint:
 
 \begin{equation}
     d_{\text{DSP}} = \frac{1}{N} \sum_{i=1}^{N} d_{\sigma_i}
@@ -93,7 +93,7 @@ This transformation improves matching performance, particularly for illumination
 
 \subsubsection{HardNet}
 
-HardNet is trained using hard negative mining with triplet loss:
+HardNet~\cite{mishchuk2017working} is trained using hard negative mining with triplet loss:
 
 \begin{equation}
     L = \max(0, m + d(a, p) - d(a, n^-))
@@ -103,24 +103,13 @@ where $(a, p)$ is a matching pair, $n^-$ is the hardest negative in the batch, a
 
 \subsubsection{SOSNet}
 
-SOSNet (Second Order Similarity Network) extends HardNet by incorporating second-order information:
+SOSNet (Second Order Similarity Network)~\cite{tian2019sosnet} extends HardNet by incorporating second-order information:
 
 \begin{equation}
     L_{\text{SOS}} = L_{\text{triplet}} + \lambda L_{\text{second-order}}
 \end{equation}
 
 SOSNet achieves similar performance to HardNet with slightly better generalization.
-
-\subsubsection{Other Learned Baselines}
-
-In addition to state-of-the-art descriptors like HardNet and SOSNet, we consider earlier learned descriptors to provide a comprehensive baseline:
-
-\begin{itemize}
-    \item \textbf{TFeat}: A lightweight descriptor trained with triplet loss using a shallow convolutional network.
-    \item \textbf{L2-Net}: A discriminative descriptor that served as a precursor to HardNet, emphasizing L2 distance optimization in the feature space.
-\end{itemize}
-
-These descriptors, while older, represent important milestones in the transition from handcrafted to learned features and are included in our ONNX-based evaluation framework.
 
 \subsection{Distribution Characteristics}
 
@@ -188,7 +177,7 @@ However, \textit{cross-detector early fusion}---averaging or concatenating descr
 
 \subsection{HPatches}
 
-The HPatches benchmark provides:
+The HPatches benchmark~\cite{balntas2017hpatches} provides:
 \begin{itemize}
     \item 116 sequences with ground-truth homographies
     \item 59 viewpoint sequences (geometric changes)
@@ -198,7 +187,7 @@ The HPatches benchmark provides:
 
 \subsection{Evaluation Tasks}
 
-Bojanic et al. define three evaluation tasks:
+Bojanic et al.~\cite{bojanic2020comparison} define three evaluation tasks:
 
 \textbf{Image Matching}: Match descriptors between image pairs using SNN ratio test, compute precision-recall curves, report mean Average Precision (mAP).
 

@@ -8,9 +8,9 @@ Local feature detection and description remain fundamental to many computer visi
 The computer vision community has developed two distinct families of local feature descriptors:
 
 \begin{itemize}
-    \item \textbf{Traditional descriptors} such as SIFT, SURF, and their variants rely on hand-crafted gradient histograms computed at keypoint locations detected by scale-space analysis.
+    \item \textbf{Traditional descriptors} such as SIFT~\cite{lowe2004distinctive}, SURF~\cite{bay2006surf}, and their variants rely on hand-crafted gradient histograms computed at keypoint locations detected by scale-space analysis.
 
-    \item \textbf{Learned descriptors} such as HardNet and SOSNet use convolutional neural networks trained on patch correspondence tasks, typically paired with learned detectors like KeyNet.
+    \item \textbf{Learned descriptors} such as HardNet~\cite{mishchuk2017working} and SOSNet~\cite{tian2019sosnet} use convolutional neural networks trained on patch correspondence tasks, typically paired with learned detectors like KeyNet~\cite{barroso2019key}.
 \end{itemize}
 
 Each family has distinct characteristics. Traditional descriptors are well-understood, deterministic, and compute patches around keypoints detected at multiple scales. Learned descriptors achieve higher matching accuracy but are trained end-to-end with specific detector choices. A natural question arises: can we combine the complementary strengths of both families through descriptor fusion?
@@ -42,7 +42,7 @@ This thesis makes the following contributions:
 
     \item \textbf{Successful CNN Fusion.} We show that CNN+CNN fusion succeeds when distributions are compatible, achieving 93.4\% mAP with HardNet+SOSNet concatenation---the highest result in our study.
 
-    \item \textbf{DescriptorWorkbench Framework.} We develop an open-source evaluation framework implementing the metrics from Bojanic et al. (2020).
+    \item \textbf{DescriptorWorkbench Framework.} We develop an open-source evaluation framework implementing the metrics from Bojanic et al.~\cite{bojanic2020comparison}.
 \end{enumerate}
 
 \section{Thesis Organization}
