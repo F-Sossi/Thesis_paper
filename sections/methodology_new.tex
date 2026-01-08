@@ -110,6 +110,29 @@ The MNN algorithm guarantees several desirable properties:
     \item \textbf{Mutual agreement}: Both keypoints must be each other's nearest neighbor
 \end{itemize}
 
+% ============================================================================
+% CLAUDE EDIT: Clarification that intersection only uses (x,y), not scale/orientation
+% ============================================================================
+\subsubsection{Matching Criteria Limitations}
+
+The current implementation uses \textit{only spatial position} $(x, y)$ for keypoint matching. Scale (\texttt{cv::KeyPoint::size}) and orientation (\texttt{cv::KeyPoint::angle}) are \textit{not} used as matching criteria:
+
+\begin{verbatim}
+// Only x,y coordinates populate the KD-tree
+data.at<float>(i, 0) = keypoint.pt.x;
+data.at<float>(i, 1) = keypoint.pt.y;
+// keypoint.size and keypoint.angle are NOT included
+\end{verbatim}
+
+The matched keypoints retain their original scale and orientation properties (stored in the database), but these attributes do not influence which keypoints are paired---only spatial proximity determines correspondence.
+
+\textbf{Rationale:} Different detectors produce vastly different scale estimates for the same image location (e.g., SIFT averages 4.45px while KeyNet averages 49.83px on HPatches). Requiring scale agreement would eliminate most correspondences. Similarly, orientation estimates vary significantly between detector families.
+
+\textbf{Future work:} Scale-aware matching could be explored by normalizing scales relative to each detector's distribution before matching, or by using a scale-ratio threshold in addition to spatial tolerance.
+% ============================================================================
+% END CLAUDE EDIT
+% ============================================================================
+
 \subsection{Tolerance Selection}
 
 Following Mikolajczyk and Schmid's detector evaluation methodology, we use a default tolerance of $\tau = 3.0$ pixels. This value balances:
@@ -119,6 +142,26 @@ Following Mikolajczyk and Schmid's detector evaluation methodology, we use a def
     \item \textbf{Loose enough}: Accounts for typical detector variance (1-3 pixels)
     \item \textbf{Literature-supported}: Standard practice in feature matching research
 \end{itemize}
+
+% ============================================================================
+% CLAUDE EDIT: Clarification that tolerance is NOT ground truth tolerance
+% ============================================================================
+\textbf{Important distinction:} The tolerance parameter $\tau$ used in intersection computation is \textit{not} related to ground truth matching error tolerance. It defines the maximum spatial distance (in pixels) between keypoint centers from different detectors to consider them as detecting the ``same'' image feature. This is a detector-level correspondence criterion, not an evaluation metric.
+
+For example, if SIFT detects a corner at $(100.0, 200.0)$ and KeyNet detects a blob at $(102.1, 201.5)$, the Euclidean distance is 2.65 pixels. With $\tau = 3.0$, these keypoints are paired as corresponding to the same image location.
+
+\textbf{Tolerance vs. scale:} The current implementation uses a fixed pixel tolerance regardless of keypoint scale. A scale-proportional tolerance (e.g., $\tau = 0.3 \times \text{avg\_scale}$) could be explored in future work, though the fixed tolerance has proven effective and computationally efficient.
+
+\textbf{Experimental validation:} We tested tolerances from 1.0 to 6.0 pixels:
+\begin{itemize}
+    \item $\tau = 1.0$ (strict): 67.41\% mAP---fewer but higher-quality matches
+    \item $\tau = 3.0$ (default): $\sim$65\% mAP---balanced
+    \item $\tau = 6.0$ (loose): 74.93\% mAP---more matches, better for scale-matched sets
+\end{itemize}
+The 6-pixel tolerance is used for scale-matched intersection sets because larger-scale keypoints have inherently more localization variance.
+% ============================================================================
+% END CLAUDE EDIT
+% ============================================================================
 
 \subsection{Implementation}
 
@@ -169,6 +212,30 @@ To create scale-controlled keypoint sets, we:
     \item Retain top $k$\% (typically 25\%)
     \item Apply minimum scale threshold (6 pixels) to exclude aliased features
 \end{enumerate}
+
+% ============================================================================
+% CLAUDE EDIT: Added implementation details for professor's question on scale filtering
+% ============================================================================
+\subsubsection{Implementation Details}
+
+The scale filtering is implemented by sorting keypoints by their \texttt{cv::KeyPoint::size} attribute, which represents the diameter of the detected feature in pixels. The implementation selects the top $N$ keypoints after sorting in descending order:
+
+\begin{verbatim}
+// Sort by keypoint size (scale) descending
+std::sort(keypoints.begin(), keypoints.end(),
+    [](const cv::KeyPoint& a, const cv::KeyPoint& b) {
+        return a.size > b.size;
+    });
+// Keep only top N keypoints
+keypoints.resize(target_count);
+\end{verbatim}
+
+\textbf{Why larger scales improve performance:} SIFT computes descriptors using $16 \times 16$ spatial bins at the keypoint's detected scale. Larger-scale keypoints capture more image context within each bin, producing more distinctive gradient histograms that are stable under geometric and photometric transformations. Small-scale keypoints ($<$6 pixels) suffer from aliasing artifacts and provide insufficient context for reliable matching.
+
+\textbf{Experimental validation:} Scale filtering provides a +21\% absolute improvement for SIFT (42.64\% $\rightarrow$ 63.86\% mAP), representing a 50\% relative gain. This single optimization has greater impact than any fusion strategy tested.
+% ============================================================================
+% END CLAUDE EDIT
+% ============================================================================
 
 \subsection{Scale-Matched Intersection}
 
@@ -247,6 +314,45 @@ The primary metric for descriptor utility is Mean Average Precision (mAP) in an 
 \end{enumerate}
 
 We report \textbf{True Micro mAP}: An Information Retrieval (IR) style metric where we aggregate AP over all queries. Crucially, we enforce a \textbf{Single Ground Truth (R=1)} policy: for a given keypoint in $I_A$, there is at most one correct match in $I_B$ (the nearest neighbor in the intersection set).
+
+% ============================================================================
+% CLAUDE EDIT: Detailed explanation of True mAP vs legacy precision
+% ============================================================================
+\subsubsection{True mAP vs. Legacy Precision}
+
+It is important to distinguish our ``True mAP'' metric from simpler precision-based measures sometimes reported in the literature:
+
+\textbf{Legacy Precision (not used):}
+\begin{itemize}
+    \item Simple arithmetic mean of per-image precision values
+    \item Formula: $\frac{1}{N}\sum_{i=1}^{N} \text{precision}_i$
+    \item Does not account for ranking quality
+\end{itemize}
+
+\textbf{True mAP (our metric):}
+\begin{itemize}
+    \item Standard Information Retrieval Mean Average Precision
+    \item For each query keypoint, compute the rank of the true match
+    \item $\text{AP} = \frac{1}{\text{rank}}$ for single ground truth (R=1 policy)
+    \item Average over all valid queries: $\text{mAP} = \frac{1}{|Q|}\sum_{q \in Q} \text{AP}_q$
+\end{itemize}
+
+\textbf{Implementation:} Ground truth is established by projecting query keypoints via the known homography matrix $H$ and finding the nearest target keypoint within a 3-pixel tolerance:
+\begin{verbatim}
+// Project query keypoint to target image
+cv::Point2f projected = applyHomography(query_pt, H);
+// Find nearest target keypoint within tolerance
+int gt_idx = findNearest(projected, target_keypoints, tau=3.0);
+// Compute rank: how many incorrect matches score better?
+int rank = 1 + count_better_scoring_matches;
+// AP = 1/rank for single ground truth
+double ap = 1.0 / rank;
+\end{verbatim}
+
+This IR-style evaluation is the standard used in HPatches benchmarks and ensures comparability with published results.
+% ============================================================================
+% END CLAUDE EDIT
+% ============================================================================
 
 \subsection{Task 2: Keypoint Verification}
 

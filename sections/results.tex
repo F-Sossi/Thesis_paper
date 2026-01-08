@@ -114,6 +114,73 @@ Contrary to our initial expectations, fusing SIFT with HardNet did not yield per
 
 This 10.7\% drop in performance indicates a fundamental incompatibility between the descriptor spaces. As discussed in Chapter 3, SIFT histograms are non-negative and sparse, while HardNet embeddings are dense and zero-centered. Concatenation creates a heterogeneous feature vector where the L2 distance is dominated by the SIFT component's scale, effectively corrupting the high-quality HardNet information.
 
+% ============================================================================
+% CLAUDE EDIT: Added SIFT-family fusion analysis for professor's questions
+% ============================================================================
+\subsection{Same-Family Fusion (SIFT Variants)}
+
+We also evaluated fusion within the SIFT family to determine if combining grayscale and color descriptors provides benefit.
+
+\begin{table}[h]
+\centering
+\caption{SIFT-family fusion results on scale-controlled keypoints}
+\label{tab:sift_family_fusion}
+\begin{tabular}{llr}
+\toprule
+\textbf{Configuration} & \textbf{Fusion Method} & \textbf{mAP} \\
+\midrule
+SIFT alone & --- & 63.86\% \\
+DSPSIFT\_V2 alone & --- & 65.31\% \\
+DSPRGBSIFT\_V2 alone & --- & 66.03\% \\
+\midrule
+DSPSIFT + DSPRGBSIFT & Concatenate (256D) & 65.77\% \\
+DSPSIFT + DSPRGBSIFT & Average (128D) & 65.37\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key finding:} Same-family fusion provides minimal benefit. The best single descriptor (DSPRGBSIFT\_V2 at 66.03\%) slightly outperforms both fusion configurations. This suggests that SIFT-family descriptors, even when one uses color (RGB) and one uses grayscale, capture highly correlated information when computed on the same keypoints.
+
+\subsubsection{SIFT + SURF Fusion on Intersection Sets}
+
+We tested cross-detector fusion using SIFT and SURF descriptors on their spatial intersection:
+
+\begin{table}[h]
+\centering
+\caption{SIFT-SURF fusion on intersection keypoints}
+\label{tab:sift_surf_fusion}
+\begin{tabular}{lr}
+\toprule
+\textbf{Configuration} & \textbf{mAP} \\
+\midrule
+DSPSIFT\_V2 on intersection & 74.93\% \\
+RGBSIFT on intersection & 75.03\% \\
+SURF on intersection & 75.08\% \\
+\midrule
+SIFT + SURF (concatenate) & 74.37\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Again, fusion slightly underperforms the best single descriptor. The intersection filtering itself provides the primary benefit---once keypoints are filtered to those detected by both SIFT and SURF, individual descriptors already perform well, and fusion adds little value.
+
+\subsubsection{Why Same-Family Fusion Fails to Help}
+
+The lack of fusion benefit can be attributed to three factors:
+
+\begin{enumerate}
+    \item \textbf{Correlated information}: SIFT-family descriptors on the same keypoints capture similar gradient histogram information, even when one uses color channels.
+
+    \item \textbf{Quality ceiling}: Scale filtering and intersection already select the highest-quality keypoints, leaving little room for fusion to provide additional signal.
+
+    \item \textbf{Averaging dilutes distinctiveness}: When descriptors are similar, averaging produces a descriptor that is less distinctive than either component, while concatenation doubles dimensionality without adding complementary information.
+\end{enumerate}
+
+\textbf{Note on normalization:} All descriptors are L2-normalized per row after pooling, so magnitude differences are not the issue. The fundamental problem is that SIFT-family descriptors provide redundant rather than complementary information.
+% ============================================================================
+% END CLAUDE EDIT
+% ============================================================================
+
 \subsection{Intra-Family Fusion (HardNet + SOSNet)}
 
 Fusing two learned descriptors proved highly effective. Table~\ref{tab:fusion_results} shows the results for fusing HardNet and SOSNet on the scale-matched intersection set.
