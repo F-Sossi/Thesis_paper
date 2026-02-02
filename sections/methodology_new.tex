@@ -1,9 +1,10 @@
 % Chapter 3: Methodology
-% DRAFTING: Comprehensive methodology chapter 2025-12-07
+% TODO: Remove DRAFTING comments before final submission
 
 This chapter describes our methodology for cross-detector descriptor fusion, including the spatial intersection algorithm, scale-matching strategy, and evaluation framework.
 
 \section{DescriptorWorkbench Framework}
+\todo[inline]{Add hardware/software specifications: GPU model, CUDA version, CPU, RAM, OpenCV version, LibTorch version, OS}
 
 We developed DescriptorWorkbench, an open-source evaluation framework for local feature descriptor research. The framework provides:
 
@@ -194,7 +195,9 @@ The matched keypoints retain their original scale and orientation properties (st
 
 \subsection{Tolerance Selection}
 
-Following Mikolajczyk and Schmid's detector evaluation methodology, we use a default tolerance of $\tau = 3.0$ pixels. This value balances:
+Following Mikolajczyk and Schmid's detector evaluation methodology, we use a default tolerance of $\tau = 3.0$ pixels.
+\todo[inline]{Add Mikolajczyk \& Schmid 2005 citation to bibliography: A performance evaluation of local descriptors}
+This value balances:
 
 \begin{itemize}
     \item \textbf{Strict enough}: Prevents misaligned correspondences
@@ -482,3 +485,5 @@ Experiments are specified in YAML configuration files and executed via:
 \end{verbatim}
 
 Results are automatically stored in the SQLite database with full parameter logging for reproducibility.
+
+\todo[inline]{Add computational cost/timing table from experiments.db (processing\_time\_ms column)}

@@ -1,7 +1,8 @@
 % Chapter 4: Experiments and Results
 \chapter{Experiments and Results}
 \label{chap:results}
-% DRAFTING: Restructured to clearly separate full-image (detector) and patch (descriptor) experiments
+% TODO: Remove DRAFTING comments before final submission
+\todo[inline]{Add figures: descriptor\_distributions.png, fusion\_contribution\_analysis.png from analysis/output/}
 
 This chapter presents experimental results from two complementary evaluation pipelines:
 
@@ -207,6 +208,7 @@ HardNet + SOSNet & Weighted Avg & 92.3\% & 91.4\% & 93.2\% \\
 \end{table}
 
 \textbf{Key Finding:} The concatenation of HardNet and SOSNet achieves a state-of-the-art mAP of \textbf{93.4\%}. This represents an 11.3 percentage point improvement over the single best descriptor (HardNet).
+\todo[inline]{Verify 93.4\% matches database query and is consistent with abstract/conclusion}
 
 The success of this fusion suggests that while both networks are trained on similar data, they learn complementary representations of the image patches. Concatenation preserves this distinct information, whereas averaging tends to dilute it slightly (92.3\% vs 93.4\%).
 
@@ -227,7 +229,7 @@ Analyzing the breakdown of full-image results provides insight into where these 
 \section{Color Patch Benchmark Results}
 \label{sec:patch_results}
 % ===================================================================
-% DRAFTING: New section for patch benchmark with color descriptors
+\todo[inline]{Decision needed: Run verification/retrieval metrics for CNN experiments? Currently only SIFT baseline has these.}
 
 The patch benchmark isolates descriptor effects by using pre-extracted 65$\times$65 color patches. All descriptors are computed on identical patch locations, removing keypoint quality as a confounding variable.
 

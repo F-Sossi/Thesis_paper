@@ -1,5 +1,5 @@
 % Chapter 1: Introduction
-% DRAFTING: Revised to emphasize detector fusion theory and color descriptor fusion 2025-02
+% TODO: Remove DRAFTING comments before final submission
 
 Local feature detection and description remain fundamental to many computer vision applications, including simultaneous localization and mapping (SLAM), structure-from-motion (SfM), image retrieval, and visual place recognition. Despite significant advances in end-to-end learned approaches, local feature methods remain competitive due to their interpretability, efficiency, and ability to handle wide-baseline matching.
 
@@ -20,6 +20,7 @@ Each approach has distinct strengths. A natural question arises: can we combine 
 The first insight is that \textit{detector agreement provides a quality signal}. When two distinct detection methods---whether SIFT and SURF (both gradient-based but with different scale-space representations) or SIFT and KeyNet (traditional and learned)---both identify a keypoint at the same image location, this ``consensus'' indicates a genuinely distinctive feature. Different detectors identify keypoints based on different criteria; when they agree, the underlying image structure must be salient across multiple representations. We hypothesize that such consensus keypoints are more repeatable \todo[inline]{Not sure if they are more repeatable we will need to look into this} and discriminative than those found by any single detector alone.
 
 The second insight is that \textit{complementary descriptors can be successfully fused} when their characteristics are compatible. Color descriptors like HoNC provide strong discriminative power (rejecting false matches), while learned descriptors like HardNet and SOSNet provide robust matching under geometric and photometric changes. Combining a ``discriminator'' with a ``matcher'' yields better performance than either alone.
+\todo[inline]{Verify all percentage claims match Results chapter: HardNet intersection 82.1\%, HardNet+SOSNet 93.4\%, HoNC+SOSNet 50.6\%}
 
 \section{Research Questions}
 

@@ -1,0 +1,9 @@
+\contentsline {todo}{\fcolorbox {black}{orange}{\textcolor {orange}{o}}\ Not sure if they are more repeatable we will need to look into this}{2}{section*.6}%
+\contentsline {todo}{\fcolorbox {black}{orange}{\textcolor {orange}{o}}\ Verify all percentage claims match Results chapter: HardNet intersection 82.1\%, HardNet+SOSNet 93.4\%, HoNC+SOSNet 50.6\%}{2}{section*.7}%
+\contentsline {todo}{\fcolorbox {black}{orange}{\textcolor {orange}{o}}\ Add hardware/software specifications: GPU model, CUDA version, CPU, RAM, OpenCV version, LibTorch version, OS}{13}{section*.16}%
+\contentsline {todo}{\fcolorbox {black}{orange}{\textcolor {orange}{o}}\ Add Mikolajczyk \& Schmid 2005 citation to bibliography: A performance evaluation of local descriptors}{20}{section*.23}%
+\contentsline {todo}{\fcolorbox {black}{orange}{\textcolor {orange}{o}}\ Add computational cost/timing table from experiments.db (processing\_time\_ms column)}{29}{section*.26}%
+\contentsline {todo}{\fcolorbox {black}{orange}{\textcolor {orange}{o}}\ Add figures: descriptor\_distributions.png, fusion\_contribution\_analysis.png from analysis/output/}{30}{section*.27}%
+\contentsline {todo}{\fcolorbox {black}{orange}{\textcolor {orange}{o}}\ Verify 93.4\% matches database query and is consistent with abstract/conclusion}{35}{section*.30}%
+\contentsline {todo}{\fcolorbox {black}{orange}{\textcolor {orange}{o}}\ Decision needed: Run verification/retrieval metrics for CNN experiments? Currently only SIFT baseline has these.}{36}{section*.31}%
+\contentsline {todo}{\fcolorbox {black}{orange}{\textcolor {orange}{o}}\ Add actual timing numbers from experiments.db to quantify the overhead}{46}{section*.32}%

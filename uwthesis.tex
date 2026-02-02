@@ -97,7 +97,7 @@
 \Title{Cross-Detector Descriptor Fusion: \\
 Scale Control and Spatial Alignment for Local Feature Matching}
 \Author{Frank Sossi}
-\Year{2025}
+\Year{2026}
 \Program{Computer Science \& Software Engineering}
 
 \Chair{Professor Clark Olson}{Committee Chair}{Computing \& Software Systems}
@@ -120,7 +120,8 @@ Scale Control and Spatial Alignment for Local Feature Matching}
 
 \setcounter{page}{-1}
 \abstract{%
-% DRAFTING: Revised abstract to emphasize detector fusion theory and color descriptor fusion
+% TODO: Check abstract length against UW requirements (currently ~340 words, typical limit 150-350)
+% TODO: Verify all numbers match Results chapter
 Local feature descriptors are fundamental to many computer vision applications including SLAM, structure-from-motion, and image retrieval. This thesis investigates two complementary approaches to improving local feature matching: using multiple detectors as a quality filter for keypoint selection, and fusing complementary descriptors to combine their strengths.
 
 We present four main contributions. First, we demonstrate that spatial intersection between distinct keypoint detectors acts as a powerful quality filter. When different detection methods---whether SIFT and SURF or SIFT and KeyNet---both identify a keypoint at the same location, this consensus indicates a genuinely distinctive feature. Descriptors computed at intersection keypoints consistently outperform those on single-detector sets, with HardNet achieving 82.4\% mAP on SIFT-KeyNet intersection---a 25\% relative improvement and the best single-descriptor result in our study.
@@ -138,6 +139,9 @@ We develop DescriptorWorkbench, an open-source evaluation framework, and conduct
 \tableofcontents
 \listoffigures
 \listoftables
+
+% TODO: Remove \listoftodos before final submission
+\listoftodos
  
 %
 % ----- acknowledgments
