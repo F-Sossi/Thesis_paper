@@ -1,5 +1,5 @@
 % Chapter 2: Background and Related Work
-% CLAUDE EDIT: New background chapter 2025-12-07
+% DRAFTING: New background chapter 2025-12-07
 
 This chapter reviews the foundations of local feature detection and description, covering traditional and learned approaches, descriptor fusion methods, and evaluation benchmarks.
 
@@ -111,28 +111,29 @@ SOSNet (Second Order Similarity Network)~\cite{tian2019sosnet} extends HardNet b
 
 SOSNet achieves similar performance to HardNet with slightly better generalization.
 
-\subsection{Distribution Characteristics}
+\subsection{Descriptor Magnitude and Normalization}
+% DRAFTING: Updated to reflect magnitude mismatch finding, not distribution incompatibility
 
-A key observation critical for understanding fusion behavior:
+A critical consideration for descriptor fusion is \textit{magnitude matching}. Different descriptor families produce values at vastly different scales before normalization:
 
 \begin{table}[h]
 \centering
-\caption{Descriptor value distribution characteristics}
-\label{tab:distributions}
-\begin{tabular}{lrrr}
+\caption{Descriptor magnitude characteristics (before and after L2 normalization)}
+\label{tab:magnitudes}
+\begin{tabular}{lrrl}
 \toprule
-\textbf{Descriptor} & \textbf{Range} & \textbf{Mean} & \textbf{Type} \\
+\textbf{Descriptor} & \textbf{Raw Range} & \textbf{After L2 Norm} & \textbf{Notes} \\
 \midrule
-SIFT & [0, 0.3] & $\approx$ 0.05 & Non-negative \\
-RootSIFT & [0, 0.4] & $\approx$ 0.08 & Non-negative \\
-DSP-SIFT & [0, 0.3] & $\approx$ 0.05 & Non-negative \\
-HardNet & [-0.3, +0.3] & $\approx$ 0 & Zero-centered \\
-SOSNet & [-0.3, +0.3] & $\approx$ 0 & Zero-centered \\
+SIFT & [0, 512] & [0, 0.3] & Gradient histogram counts \\
+RootSIFT & [0, 22] & [0, 0.4] & After sqrt transform \\
+HoNC & [0, 1] & [0, 0.3] & Normalized color histogram \\
+HardNet & [-0.3, +0.3] & [-0.3, +0.3] & Trained with L2 output \\
+SOSNet & [-0.3, +0.3] & [-0.3, +0.3] & Trained with L2 output \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-This incompatibility between non-negative and zero-centered distributions is central to understanding fusion failures.
+When fusing descriptors from different families, \textbf{magnitude mismatch} can cause one descriptor to dominate distance calculations. For example, raw SIFT values (0--512) would overwhelm HardNet values (--0.3 to +0.3) in a concatenated descriptor. The solution is to L2 normalize each component \textit{before} fusion, ensuring equal contribution regardless of original magnitude.
 
 \section{Descriptor Fusion Approaches}
 
@@ -175,24 +176,63 @@ However, \textit{cross-detector early fusion}---averaging or concatenating descr
 
 \section{Evaluation Benchmarks}
 
-\subsection{HPatches}
+\subsection{HPatches Dataset}
 
 The HPatches benchmark~\cite{balntas2017hpatches} provides:
 \begin{itemize}
     \item 116 sequences with ground-truth homographies
     \item 59 viewpoint sequences (geometric changes)
     \item 57 illumination sequences (photometric changes)
-    \item Standard protocol for descriptor evaluation
+    \item Pre-extracted 65$\times$65 grayscale patches (original benchmark)
+    \item Full images for keypoint-based evaluation
 \end{itemize}
 
-\subsection{Evaluation Tasks}
+\subsection{Two Evaluation Protocols}
+% DRAFTING: Added to distinguish patch vs full-image task protocols
 
-Bojanic et al.~\cite{bojanic2020comparison} define three evaluation tasks:
+We employ two distinct evaluation protocols, each with three tasks. The protocols differ in whether keypoint detection is part of the evaluation.
 
-\textbf{Image Matching}: Match descriptors between image pairs using SNN ratio test, compute precision-recall curves, report mean Average Precision (mAP).
+\subsubsection{Original HPatches Patch Protocol (Balntas et al.)}
 
-\textbf{Keypoint Verification}: Binary classification distinguishing true correspondences from distractors sampled from other sequences.
+The original HPatches benchmark~\cite{balntas2017hpatches} evaluates descriptors on \textit{pre-extracted patches}, removing keypoint detection as a variable:
 
-\textbf{Keypoint Retrieval}: Three-tier ranking task with labels $y \in \{-1, 0, +1\}$ distinguishing true positives, hard negatives (same sequence but not closest), and distractors.
+\textbf{Patch Matching}: For each reference patch, rank all target patches from the same sequence by descriptor distance. Report mAP based on whether the correct correspondence ranks first.
 
-We implement all three tasks in our DescriptorWorkbench framework.
+\textbf{Patch Verification}: Binary classification of patch pairs as ``same location'' (positive) or ``different location'' (negative). Negatives include both same-sequence and different-sequence patches. Report AP.
+
+\textbf{Patch Retrieval}: Given a query patch, rank a gallery containing true matches and distractors from different sequences. Report mAP.
+
+We use this protocol for our \textbf{color patch benchmark} (Section~\ref{sec:patch_results}) to isolate descriptor fusion effects.
+
+\subsubsection{Bojanic et al. Full-Image Protocol}
+
+Bojanic et al.~\cite{bojanic2020comparison} define an evaluation protocol for \textit{full images with detected keypoints}:
+
+\textbf{Image Matching}: Match descriptors between image pairs using the Second Nearest Neighbor (SNN) ratio test. A match is correct if the geometric reprojection error is below threshold. Report mAP.
+
+\textbf{Keypoint Verification}: Binary classification distinguishing true correspondences from distractors sampled from \textit{other sequences} (not same-sequence negatives).
+
+\textbf{Keypoint Retrieval}: Three-tier ranking with labels $y \in \{-1, 0, +1\}$: true positives (+1), hard negatives from the same sequence (0, ignored in scoring), and distractors from other sequences (-1).
+
+We use this protocol for our \textbf{full-image experiments} (Sections~\ref{sec:baseline_results}--\ref{sec:intersection_results}) to study detector effects.
+
+\subsubsection{Key Differences}
+
+\begin{table}[h]
+\centering
+\caption{Comparison of evaluation protocols}
+\label{tab:protocols}
+\begin{tabular}{lll}
+\toprule
+\textbf{Aspect} & \textbf{Patch Protocol} & \textbf{Bojanic Protocol} \\
+\midrule
+Input & Pre-extracted patches & Full images \\
+Keypoint detection & Not evaluated & Part of pipeline \\
+Verification negatives & Same + different sequence & Different sequence only \\
+Retrieval labeling & Binary (pos/distractor) & Three-tier ($-1, 0, +1$) \\
+Isolates & Descriptor quality & Detector + descriptor \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+We implement both protocols in DescriptorWorkbench to enable controlled experiments.

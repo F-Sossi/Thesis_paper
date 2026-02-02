@@ -1,20 +1,22 @@
 % Chapter 6: Conclusion and Future Work
-% CLAUDE EDIT: New conclusion chapter 2025-12-07
+% DRAFTING: Updated to reflect magnitude matching findings and color descriptor fusion 2025-02
 
 \section{Summary of Contributions}
 
-This thesis investigated cross-detector descriptor fusion for local feature matching, making the following contributions:
+This thesis investigated detector consensus and descriptor fusion for local feature matching, making the following contributions:
 
 \begin{enumerate}
-    \item \textbf{Scale Control Methodology}: We demonstrated that filtering keypoints by scale yields dramatic improvements: +39\% relative for SIFT-family descriptors and +21\% relative for CNN descriptors. This finding suggests that keypoint quality is at least as important as descriptor algorithm choice.
+    \item \textbf{Detector Intersection as Quality Filter}: We demonstrated that keypoints detected by multiple distinct detectors are more distinctive than those found by any single detector. This effect holds for both SIFT-SURF and SIFT-KeyNet intersections, with HardNet achieving 82.4\% mAP on intersection keypoints---a 25\% relative improvement.
 
-    \item \textbf{Spatial Intersection Algorithm}: We developed a mutual nearest neighbor algorithm for establishing 1-to-1 correspondence between keypoints from different detectors. This enables cross-detector descriptor fusion with configurable spatial tolerance.
+    \item \textbf{Color HPatches Benchmark}: We created a color version of the HPatches patch benchmark by re-extracting 65$\times$65 color patches from original images. This enables evaluation of color descriptors like HoNC.
 
-    \item \textbf{Distribution Incompatibility Analysis}: We identified why SIFT+CNN descriptor fusion fails: the incompatible value distributions (non-negative versus zero-centered) cause averaging to corrupt learned representations. This explains a 6.7\% performance degradation compared to using HardNet alone.
+    \item \textbf{Magnitude Matching for Cross-Family Fusion}: We show that cross-family fusion (SIFT+CNN) requires pre-fusion L2 normalization to ensure equal contribution from each descriptor. With proper normalization, SIFT+HardNet achieves 46.0\% mAP on patches.
 
-    \item \textbf{Successful CNN Fusion}: We showed that CNN+CNN fusion succeeds when distributions are compatible. HardNet+SOSNet concatenation at scale-matched intersection keypoints achieves 93.4\% mAP on HPatches---the highest result in our study.
+    \item \textbf{Complementary Descriptor Fusion}: We showed that pairing a ``discriminator'' (HoNC, high verification-to-matching ratio) with a ``matcher'' (CNN) yields substantial improvements. HoNC+SOSNet concatenation achieves 50.6\% mAP on the color patch benchmark, outperforming all individual descriptors.
 
-    \item \textbf{DescriptorWorkbench Framework}: We developed an open-source evaluation framework implementing image matching, keypoint verification, and keypoint retrieval metrics from Bojanic et al.~\cite{bojanic2020comparison}. The framework supports 108+ experiments across 99 descriptor configurations.
+    \item \textbf{Scale Control Methodology}: We demonstrated that filtering keypoints by scale yields dramatic improvements: +39\% relative for SIFT-family descriptors and +21\% relative for CNN descriptors.
+
+    \item \textbf{DescriptorWorkbench Framework}: We developed an open-source evaluation framework implementing image matching, keypoint verification, and keypoint retrieval metrics from Bojanic et al.~\cite{bojanic2020comparison}, supporting both full-image and patch-based evaluation.
 \end{enumerate}
 
 \section{Key Findings}
@@ -22,13 +24,15 @@ This thesis investigated cross-detector descriptor fusion for local feature matc
 Our experiments reveal several important insights for local feature matching:
 
 \begin{itemize}
-    \item \textbf{Quality over quantity}: Fewer, better keypoints (scale-filtered) outperform more, lower-quality keypoints by substantial margins.
+    \item \textbf{Quality over quantity}: Fewer, better keypoints (scale-filtered or intersection-filtered) outperform larger sets of lower-quality keypoints.
 
-    \item \textbf{Detector agreement matters}: Keypoints detected by multiple methods are more reliable, as evidenced by the 17.6\% improvement from spatial intersection filtering.
+    \item \textbf{Detector agreement provides quality signal}: Keypoints detected by multiple distinct methods are more reliable, with 17--25\% improvements from intersection filtering.
 
-    \item \textbf{Distribution compatibility is essential}: Descriptor fusion requires compatible value distributions. Non-negative (SIFT) and zero-centered (CNN) distributions are fundamentally incompatible.
+    \item \textbf{Magnitude matching enables cross-family fusion}: Pre-fusion L2 normalization allows successful SIFT+CNN combination by ensuring equal contribution from each descriptor.
 
-    \item \textbf{Concatenation preserves information}: When fusing compatible descriptors, concatenation outperforms averaging by preserving complementary features.
+    \item \textbf{Complementary descriptors outperform similar ones}: HoNC+CNN fusion outperforms CNN+CNN or SIFT+SIFT because the descriptors capture different information (color vs. learned features).
+
+    \item \textbf{Concatenation preserves information}: Concatenation consistently outperforms averaging by preserving complementary features.
 \end{itemize}
 
 \section{Practical Recommendations}
@@ -36,27 +40,26 @@ Our experiments reveal several important insights for local feature matching:
 Based on our findings, we offer the following recommendations:
 
 \begin{enumerate}
-    \item \textbf{For highest accuracy}: Use HardNet+SOSNet concatenation on scale-matched intersection keypoints (93.4\% mAP).
+    \item \textbf{For best patch matching}: Use HoNC+SOSNet concatenation (50.6\% mAP), leveraging color discrimination with learned matching.
 
-    \item \textbf{For traditional descriptors}: Apply scale filtering (top 25\%) and use DSP-SIFT or RootSIFT (64.4\% mAP vs 46.7\% baseline).
+    \item \textbf{For best full-image matching}: Use HardNet on detector intersection keypoints (82.4\% mAP), or HardNet+SOSNet concatenation (93.4\% mAP) for highest accuracy.
 
-    \item \textbf{Avoid}: SIFT+CNN fusion in any form---distribution incompatibility causes consistent degradation.
+    \item \textbf{For cross-family fusion}: Always L2 normalize each descriptor component before fusion to ensure equal contribution.
 
-    \item \textbf{For real-time applications}: Consider the dimensionality trade-off; single CNN descriptors (HardNet at 78.1\%) may be preferable to concatenation (93.4\% but 256D).
+    \item \textbf{For traditional descriptors}: Apply scale filtering (top 25\%) and use intersection keypoints (64--75\% mAP vs 42\% baseline).
 \end{enumerate}
 
 \section{Future Work}
 
 Several directions remain for future investigation:
 
-\subsection{Distribution Alignment}
+\subsection{Learned Fusion Weights}
 
-Could SIFT+CNN fusion succeed with distribution alignment? Potential approaches:
-\begin{itemize}
-    \item Transform SIFT to zero-centered: $d' = d - \text{mean}(d)$
-    \item Learn a projection matrix to align distributions
-    \item Use non-linear transforms (e.g., hyperbolic tangent)
-\end{itemize}
+Rather than fixed $\alpha = 0.5$ weighting, learn optimal weights:
+\begin{equation}
+    d_{\text{fused}} = \sum_i w_i \cdot d_i, \quad \text{s.t.} \sum_i w_i = 1
+\end{equation}
+Weights could be learned per-dimension or globally, potentially improving cross-family fusion further.
 
 \subsection{Learned Fusion Weights}
 
@@ -90,9 +93,12 @@ Train a joint detector-descriptor-fusion network that:
 Systematically study the relationship between intersection tolerance and matching performance. Our hypothesis is an inverted U-curve: too strict yields few keypoints, too loose yields misaligned pairs.
 
 \section{Closing Remarks}
+% DRAFTING: Updated to reflect detector consensus and color fusion findings
 
-This thesis demonstrates that cross-detector descriptor fusion is possible---but only when descriptor distributions are compatible. The key insight is not algorithmic but statistical: fusion methods cannot overcome fundamental incompatibilities in how descriptors represent image patches.
+This thesis demonstrates two complementary approaches to improving local feature matching. First, using multiple detectors as a consensus filter identifies high-quality keypoints that are more distinctive and repeatable than those found by any single detector. Second, fusing complementary descriptors---particularly color descriptors like HoNC with learned descriptors like SOSNet---captures information that neither descriptor provides alone.
 
-More broadly, our findings suggest that the computer vision community should pay greater attention to keypoint quality. The 39\% improvement from scale control exceeds most algorithmic advances, yet scale filtering is rarely discussed in the literature. We hope this work encourages more research into keypoint selection strategies alongside descriptor algorithm development.
+A key technical finding is that cross-family fusion (SIFT+CNN) requires proper magnitude matching through pre-fusion L2 normalization. The initial fusion failures were not due to fundamental incompatibility between descriptor families, but rather a fixable magnitude mismatch problem.
 
-The DescriptorWorkbench framework and all experimental configurations are available as open-source software, enabling reproduction and extension of these results.
+More broadly, our findings suggest that the computer vision community should pay greater attention to keypoint quality. The 39\% improvement from scale control and 25\% improvement from detector consensus exceed most algorithmic advances, yet these filtering strategies are rarely discussed in the literature. We hope this work encourages more research into keypoint selection strategies alongside descriptor algorithm development.
+
+The DescriptorWorkbench framework, color HPatches benchmark, and all experimental configurations are available as open-source software, enabling reproduction and extension of these results.

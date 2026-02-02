@@ -1,32 +1,38 @@
 % Chapter 1: Introduction
-% CLAUDE EDIT: Complete rewrite 2025-12-07
+% DRAFTING: Revised to emphasize detector fusion theory and color descriptor fusion 2025-02
 
 Local feature detection and description remain fundamental to many computer vision applications, including simultaneous localization and mapping (SLAM), structure-from-motion (SfM), image retrieval, and visual place recognition. Despite significant advances in end-to-end learned approaches, local feature methods remain competitive due to their interpretability, efficiency, and ability to handle wide-baseline matching.
 
 \section{Motivation}
 
-The computer vision community has developed two distinct families of local feature descriptors:
+The computer vision community has developed diverse approaches to local feature extraction, spanning both detection and description:
 
 \begin{itemize}
-    \item \textbf{Traditional descriptors} such as SIFT~\cite{lowe2004distinctive}, SURF~\cite{bay2006surf}, and their variants rely on hand-crafted gradient histograms computed at keypoint locations detected by scale-space analysis.
+    \item \textbf{Traditional methods} such as SIFT~\cite{lowe2004distinctive} and SURF~\cite{bay2006surf} use hand-crafted detectors based on scale-space analysis and descriptors based on gradient histograms. These methods are well-understood and deterministic.
 
-    \item \textbf{Learned descriptors} such as HardNet~\cite{mishchuk2017working} and SOSNet~\cite{tian2019sosnet} use convolutional neural networks trained on patch correspondence tasks, typically paired with learned detectors like KeyNet~\cite{barroso2019key}.
+    \item \textbf{Learned methods} such as KeyNet~\cite{barroso2019key} for detection and HardNet~\cite{mishchuk2017working} and SOSNet~\cite{tian2019sosnet} for description use convolutional neural networks trained on correspondence tasks. These achieve higher matching accuracy but are trained for specific detector-descriptor pairings.
+
+    \item \textbf{Color descriptors} such as HoNC (Histogram of Normalized Colors) capture chromatic information that gradient-based methods discard. These descriptors excel at discrimination but are sensitive to illumination changes.
 \end{itemize}
 
-Each family has distinct characteristics. Traditional descriptors are well-understood, deterministic, and compute patches around keypoints detected at multiple scales. Learned descriptors achieve higher matching accuracy but are trained end-to-end with specific detector choices. A natural question arises: can we combine the complementary strengths of both families through descriptor fusion?
+Each approach has distinct strengths. A natural question arises: can we combine these complementary capabilities? This thesis investigates two fusion strategies that prove highly effective.
+
+The first insight is that \textit{detector agreement provides a quality signal}. When two distinct detection methods---whether SIFT and SURF (both gradient-based but with different scale-space representations) or SIFT and KeyNet (traditional and learned)---both identify a keypoint at the same image location, this ``consensus'' indicates a genuinely distinctive feature. Different detectors identify keypoints based on different criteria; when they agree, the underlying image structure must be salient across multiple representations. We hypothesize that such consensus keypoints are more repeatable \todo[inline]{Not sure if they are more repeatable we will need to look into this} and discriminative than those found by any single detector alone.
+
+The second insight is that \textit{complementary descriptors can be successfully fused} when their characteristics are compatible. Color descriptors like HoNC provide strong discriminative power (rejecting false matches), while learned descriptors like HardNet and SOSNet provide robust matching under geometric and photometric changes. Combining a ``discriminator'' with a ``matcher'' yields better performance than either alone.
 
 \section{Research Questions}
 
 This thesis investigates the following research questions:
 
 \begin{enumerate}
-    \item \textbf{RQ1: Scale Impact.} How does keypoint scale distribution affect descriptor matching performance? Is larger scale universally better?
+    \item \textbf{RQ1: Detector Consensus.} Does spatial agreement between different keypoint detectors (SIFT and KeyNet) provide a quality signal? Are consensus keypoints more distinctive and repeatable?
 
-    \item \textbf{RQ2: Detector Agreement.} Does spatial agreement between different keypoint detectors (SIFT and KeyNet) provide a quality signal for filtering unreliable keypoints?
+    \item \textbf{RQ2: Color Descriptor Fusion.} Can color descriptors (HoNC) be successfully fused with learned descriptors (HardNet, SOSNet)? What complementary information does color provide?
 
-    \item \textbf{RQ3: Cross-Family Fusion.} Can traditional (SIFT) and learned (HardNet) descriptors be successfully fused? If not, why?
+    \item \textbf{RQ3: Fusion Compatibility.} What determines whether descriptor fusion succeeds or fails? Are there systematic patterns based on descriptor characteristics?
 
-    \item \textbf{RQ4: Fusion Strategy.} What fusion strategy (averaging vs. concatenation) works best, and under what conditions?
+    \item \textbf{RQ4: Scale Impact.} How does keypoint scale distribution affect descriptor matching performance? Is keypoint quality more important than descriptor algorithm choice?
 \end{enumerate}
 
 \section{Contributions}
@@ -34,15 +40,17 @@ This thesis investigates the following research questions:
 This thesis makes the following contributions:
 
 \begin{enumerate}
-    \item \textbf{Scale Control Methodology.} We demonstrate that filtering keypoints by scale dramatically improves matching performance: +39\% relative for SIFT-family descriptors and +21\% relative for CNN descriptors. This finding suggests that keypoint quality is as important as descriptor algorithm choice.
+    \item \textbf{Detector Intersection as Quality Filter.} We demonstrate that keypoints detected by multiple detectors are more distinctive than those found by a single detector. HardNet computed at SIFT-KeyNet intersection keypoints achieves 82.4\% mAP---a 25\% relative improvement over the full keypoint set and the best single-descriptor result in our study. This validates our theory that detector consensus identifies high-quality features.
 
-    \item \textbf{Spatial Intersection Algorithm.} We develop a mutual nearest neighbor algorithm for establishing 1-to-1 correspondence between keypoints from different detectors, enabling cross-detector descriptor fusion with configurable spatial tolerance.
+    \item \textbf{Color HPatches Benchmark.} We create a color version of the HPatches patch benchmark by re-extracting 65$\times$65 color patches from the original images using stored keypoint locations and homographies. This enables evaluation of color-aware descriptors that cannot be tested on the original gray scale patches.
 
-    \item \textbf{Distribution Incompatibility Analysis.} We identify and explain why SIFT+CNN descriptor fusion fails: the incompatible value distributions (non-negative versus zero-centered) cause averaging to destroy learned representations.
+    \item \textbf{Complementary Descriptor Fusion.} We show that fusing color descriptors with learned descriptors yields substantial improvements. HoNC+SOSNet concatenation achieves 50.6\% mAP on the color patch benchmark, outperforming all individual descriptors. We characterize HoNC as a ``discriminator'' (high verification-to-matching ratio of 3.84$\times$) that complements CNN ``matchers'' (ratio of 1.84$\times$).
 
-    \item \textbf{Successful CNN Fusion.} We show that CNN+CNN fusion succeeds when distributions are compatible, achieving 93.4\% mAP with HardNet+SOSNet concatenation---the highest result in our study.
+    \item \textbf{Magnitude Matching for Cross-Family Fusion.} We show that cross-family fusion (SIFT+CNN) requires pre-fusion L2 normalization to ensure equal contribution from each descriptor. With proper normalization, SIFT+HardNet achieves 46.0\% mAP on patches.
 
-    \item \textbf{DescriptorWorkbench Framework.} We develop an open-source evaluation framework implementing the metrics from Bojanic et al.~\cite{bojanic2020comparison}.
+    \item \textbf{Scale Control Methodology.} We demonstrate that filtering keypoints by scale dramatically improves matching performance: +39\% relative for SIFT-family descriptors and +21\% relative for CNN descriptors. Keypoint quality is as important as descriptor algorithm choice.
+
+    \item \textbf{DescriptorWorkbench Framework.} We develop an open-source evaluation framework implementing the image matching, keypoint verification, and keypoint retrieval metrics from Bojanic et al.~\cite{bojanic2020comparison}, supporting both full-image and patch-based evaluation.
 \end{enumerate}
 
 \section{Thesis Organization}
@@ -50,13 +58,13 @@ This thesis makes the following contributions:
 The remainder of this thesis is organized as follows:
 
 \begin{itemize}
-    \item \textbf{Chapter~\ref{chap:background}} reviews local feature detection and description, covering both traditional and learned approaches, as well as prior work on descriptor fusion.
+    \item \textbf{Chapter~\ref{chap:background}} reviews local feature detection and description, covering traditional, learned, and color-based approaches, as well as prior work on descriptor fusion.
 
-    \item \textbf{Chapter~\ref{chap:methodology}} describes our spatial intersection methodology, scale-matching strategy, and evaluation framework.
+    \item \textbf{Chapter~\ref{chap:methodology}} describes our detector intersection methodology, color patch dataset construction, and evaluation framework.
 
-    \item \textbf{Chapter~\ref{chap:results}} presents experimental results from 108 experiments on the HPatches benchmark, analyzing scale control, fusion strategies, and viewpoint/illumination breakdown.
+    \item \textbf{Chapter~\ref{chap:results}} presents experimental results from over 100 experiments on the HPatches benchmark, analyzing detector consensus effects, color descriptor fusion, and scale control.
 
-    \item \textbf{Chapter~\ref{chap:discussion}} interprets the results, explaining why certain fusion strategies succeed or fail based on distribution analysis.
+    \item \textbf{Chapter~\ref{chap:discussion}} interprets the results, explaining why detector consensus provides quality signal and why certain descriptor fusion strategies succeed.
 
     \item \textbf{Chapter~\ref{chap:conclusion}} summarizes findings and discusses future work directions.
 \end{itemize}

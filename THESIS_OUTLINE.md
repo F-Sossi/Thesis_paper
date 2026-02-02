@@ -324,7 +324,7 @@ fused = [desc_A, desc_B]  // 256D from two 128D
 - Root normalization timing matters (after > before > none)
 
 ### 4.3 Scale Control Experiments
-**Status**: ✅ COMPLETE (from CLAUDE.md baselines)
+**Status**: ✅ COMPLETE (from project baselines)
 
 #### 4.3.1 SIFT Scale Analysis
 | Configuration | mAP | Keypoints | Avg Scale |

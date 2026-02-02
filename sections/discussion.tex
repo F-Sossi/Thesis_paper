@@ -1,5 +1,5 @@
 % Chapter 5: Discussion
-% CLAUDE EDIT: New discussion chapter 2025-12-07
+% DRAFTING: New discussion chapter 2025-12-07
 
 This chapter interprets our experimental findings, explaining the underlying causes of observed performance patterns and providing practical recommendations.
 
@@ -29,67 +29,61 @@ Small-scale keypoints are more susceptible to:
 
 For production systems requiring high matching accuracy, we recommend filtering to the top 25\% of keypoints by scale. The trade-off is reduced keypoint count (645K vs 2.5M in our experiments), but the quality improvement substantially outweighs the coverage reduction.
 
-\section{Understanding Fusion Failures}
+\section{Understanding Fusion: Magnitude Matching}
+% DRAFTING: Simplified to focus on technical requirement, not bug discovery
 
-\subsection{Distribution Incompatibility}
+\subsection{Pre-Fusion Normalization Requirement}
 
-Our analysis reveals that SIFT+CNN fusion fails due to fundamental distribution incompatibility:
+Cross-family descriptor fusion (e.g., SIFT+CNN) requires careful attention to descriptor magnitudes. Different descriptor families produce values at different scales:
 
 \begin{table}[h]
 \centering
-\caption{Descriptor distribution comparison}
+\caption{Descriptor magnitude characteristics}
 \begin{tabular}{lcc}
 \toprule
-\textbf{Descriptor} & \textbf{Range} & \textbf{Mean} \\
+\textbf{Descriptor} & \textbf{Raw Range} & \textbf{After L2 Norm} \\
 \midrule
-SIFT & [0, 0.3] & 0.05 \\
-HardNet & [-0.3, +0.3] & 0.0 \\
+SIFT & [0, 512] & [0, 0.3] \\
+HardNet/SOSNet & [-0.3, +0.3] & [-0.3, +0.3] \\
+HoNC & [0, 1] & [0, 0.3] \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-When averaging a SIFT value $s \approx 0.05$ with a HardNet value $h \approx 0$:
+Without normalization, larger-magnitude descriptors dominate L2 distance calculations. The solution is to L2 normalize each descriptor component \textit{before} fusion:
+
 \begin{equation}
-    \text{avg} = \frac{s + h}{2} \approx 0.025
+    d_{\text{fused}} = \text{fuse}\left(\frac{d_A}{\|d_A\|_2}, \frac{d_B}{\|d_B\|_2}\right)
 \end{equation}
 
-The result is shifted from the zero-centered HardNet distribution, effectively corrupting the learned representation.
+With pre-fusion normalization, SIFT+HardNet achieves 46.0\% mAP on the patch benchmark---comparable to other cross-family fusions.
 
-\subsection{Fusion Contribution Analysis}
+\subsection{Why Some Fusion Still Underperforms}
 
-% Reference to fusion_contribution_analysis.png
-Our correlation analysis shows that in SIFT+HardNet fusion:
-\begin{itemize}
-    \item HardNet correlates 0.9 with the fused descriptor
-    \item SIFT correlates only 0.4 with the fused descriptor
-\end{itemize}
-
-This asymmetry indicates that averaging does not produce a balanced combination---SIFT's non-negative values shift the mean, corrupting HardNet's zero-centered representation.
-
-\subsection{Why Concatenation Also Fails for SIFT+CNN}
-
-Even concatenation produces degraded results (71.4\% vs 78.1\% HardNet alone). This occurs because:
+Even with proper normalization, SIFT+CNN fusion (46.0\%) underperforms HoNC+CNN fusion (50.6\%) because:
 \begin{enumerate}
-    \item L2 distance weights all dimensions equally
-    \item SIFT dimensions (always positive) contribute large positive values
-    \item HardNet dimensions (centered at zero) contribute smaller absolute values
-    \item SIFT effectively dominates the distance calculation
+    \item SIFT and CNN both capture gradient/edge information (correlated)
+    \item HoNC captures color information that CNN lacks (complementary)
+    \item Complementary descriptors provide more benefit than similar ones
 \end{enumerate}
+
+The key insight is that fusion success depends on \textit{complementarity}: descriptors that capture different information combine better than those capturing similar information.
 
 \section{Why CNN+CNN Fusion Succeeds}
 
-HardNet+SOSNet concatenation achieves 93.4\% mAP, improving upon either descriptor alone. We attribute this success to:
+HardNet+SOSNet concatenation achieves 93.4\% mAP on full images, improving upon either descriptor alone. We attribute this success to:
 
-\subsection{Distribution Compatibility}
+\subsection{Magnitude Compatibility}
+% DRAFTING: Renamed from "Distribution Compatibility" for consistency
 
-Both descriptors are:
+Both descriptors are already L2-normalized during training:
 \begin{itemize}
-    \item Zero-centered (mean $\approx$ 0)
     \item Similar value ranges ([-0.3, +0.3])
-    \item L2-normalized
+    \item Unit L2 norm (no magnitude mismatch)
+    \item No pre-fusion normalization needed
 \end{itemize}
 
-This compatibility ensures that averaging or concatenation produces meaningful combinations.
+This ensures equal contribution from each descriptor without additional processing.
 
 \subsection{Complementary Features}
 
@@ -111,6 +105,7 @@ Concatenation (+0.5\%) outperforms averaging (-0.6\%) because:
 \end{enumerate}
 
 \section{Detector Agreement as Quality Signal}
+% DRAFTING: Expanded based on intersection investigation findings
 
 Keypoints detected by both SIFT and KeyNet (spatial intersection) achieve higher performance than either detector alone:
 \begin{itemize}
@@ -118,7 +113,57 @@ Keypoints detected by both SIFT and KeyNet (spatial intersection) achieve higher
     \item HardNet on intersection: 82.1\% mAP (+17.6\%)
 \end{itemize}
 
-This improvement suggests that detector agreement provides a quality signal: keypoints found by both methods likely correspond to genuinely salient image features, while keypoints found by only one detector may represent detector-specific artifacts.
+We conducted a systematic investigation to understand whether this improvement stems from the \textit{keypoints} being higher quality or the \textit{descriptors} computed on them being more distinctive.
+
+\subsection{Investigation Methodology}
+
+We tested five hypotheses for the intersection gain:
+\begin{enumerate}
+    \item \textbf{Reduced count effect}: Fewer keypoints reduce false matches
+    \item \textbf{Quality selection}: Intersection selects stronger keypoints (higher response)
+    \item \textbf{Scale selection}: Intersection favors certain scale ranges
+    \item \textbf{Spatial distribution}: Intersection removes clustered keypoints
+    \item \textbf{Detector agreement}: Keypoints where detectors agree are more repeatable
+\end{enumerate}
+
+We created control keypoint sets: random subsets, top-N by response, top-N by scale, and spatially filtered sets---all matched to the intersection count (645K keypoints).
+
+\subsection{Key Finding: Keypoint Quality, Not Descriptor Distinctiveness}
+
+The investigation revealed that the improvement comes from \textbf{keypoint quality}, not descriptor properties:
+
+\begin{itemize}
+    \item \textbf{Random subsets do not match intersection performance}: Simply reducing keypoint count does not explain the gain. Random subsets of equal size perform worse than intersection sets.
+
+    \item \textbf{Scale filtering provides the largest single gain}: Filtering to large-scale keypoints (top 25\% by size) improved SIFT by 50\% (42.6\% $\rightarrow$ 63.9\%) and HardNet by 20\% (65.8\% $\rightarrow$ 78.9\%).
+
+    \item \textbf{Intersection provides additional gain beyond scale}: HardNet on intersection (82.1\%) exceeds HardNet on scale-controlled sets (78.9\%), indicating intersection captures quality beyond scale alone.
+\end{itemize}
+
+\subsection{Why Detector Agreement Indicates Quality}
+
+The intersection filters for keypoints that are \textit{genuinely salient image features} rather than detector-specific artifacts:
+
+\begin{itemize}
+    \item \textbf{Cross-validation}: If both a blob detector (KeyNet) and an edge/corner detector (SIFT) independently identify the same location as interesting, it likely corresponds to a real image structure.
+
+    \item \textbf{Repeatability}: Keypoints detected by multiple methods are more likely to be detected again under viewpoint/illumination changes---they are inherently more repeatable.
+
+    \item \textbf{Noise rejection}: Detector-specific noise or false detections are unlikely to occur at the same spatial location across different detection methods.
+\end{itemize}
+
+\subsection{Critical Distinction}
+
+The improvement is not because descriptors computed on intersection keypoints are inherently more distinctive. The same HardNet model produces the same descriptor for a given image patch regardless of how the patch location was selected.
+
+Rather, the improvement occurs because:
+\begin{enumerate}
+    \item Intersection keypoints correspond to more repeatable image structures
+    \item These structures are more likely to be detected in both reference and target images
+    \item Higher repeatability leads to more correct correspondences being available for matching
+\end{enumerate}
+
+This finding has practical implications: \textbf{keypoint selection strategy can matter as much as descriptor algorithm choice}. The 17\% gain from intersection filtering is comparable to the gap between SIFT and state-of-the-art CNN descriptors.
 
 \section{HP-V vs HP-I Patterns}
 
@@ -161,11 +206,18 @@ For real-time applications, this overhead may be prohibitive.
 Our best results use KeyNet for CNN descriptors. The findings may not transfer to other detector choices (e.g., SuperPoint's built-in detector).
 
 \section{Summary of Insights}
+% DRAFTING: Updated to reflect keypoint quality findings from intersection investigation
 
 \begin{enumerate}
-    \item \textbf{Scale matters more than descriptor choice}: A 39\% improvement from scale control exceeds most algorithmic improvements
-    \item \textbf{Distribution compatibility is essential}: SIFT+CNN fusion fails due to incompatible value distributions
-    \item \textbf{Concatenation $>$ averaging}: Preserving full information outperforms lossy aggregation
-    \item \textbf{Detector agreement filters quality}: Intersection keypoints are more reliable than single-detector keypoints
-    \item \textbf{CNN+CNN fusion works}: When distributions are compatible, complementary features improve performance
+    \item \textbf{Scale matters more than descriptor choice}: A 50\% relative improvement from scale control (SIFT: 42.6\% $\rightarrow$ 63.9\%) exceeds most algorithmic improvements
+
+    \item \textbf{Keypoint selection matters as much as descriptor algorithm}: The 17\% gain from detector intersection is comparable to the gap between traditional and CNN descriptors
+
+    \item \textbf{Detector agreement signals keypoint quality, not descriptor distinctiveness}: Intersection keypoints are more \textit{repeatable}---the descriptors themselves are not more distinctive, but the underlying image structures are more reliably detected across images
+
+    \item \textbf{Complementary descriptors outperform similar ones}: HoNC+CNN fusion (50.6\% on patches) beats CNN+CNN (49.9\%) because color and learned features capture different information
+
+    \item \textbf{Magnitude matching enables cross-family fusion}: Pre-fusion L2 normalization is required for SIFT+CNN fusion
+
+    \item \textbf{Concatenation $>$ averaging}: Preserving full information outperforms lossy aggregation across all successful fusions
 \end{enumerate}

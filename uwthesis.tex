@@ -51,6 +51,10 @@
 \usepackage{graphicx}     % For figures
 \usepackage{amsmath}      % Math equations
 \usepackage{hyperref}     % Hyperlinks in PDF
+\usepackage[colorinlistoftodos,prependcaption]{todonotes}  % Drafting notes
+% Usage: \todo{Note text} for margin notes
+%        \todo[inline]{Note text} for inline notes
+%        \listoftodos to generate list of all todos
 
 \setcounter{tocdepth}{1}  % Print the chapter and sections to the toc
  
@@ -116,11 +120,16 @@ Scale Control and Spatial Alignment for Local Feature Matching}
 
 \setcounter{page}{-1}
 \abstract{%
-Local feature descriptors are fundamental to many computer vision applications including SLAM, structure-from-motion, and image retrieval. This thesis investigates the fusion of descriptors from different detector families---traditional (SIFT) and learned (KeyNet)---through spatial keypoint alignment.
+% DRAFTING: Revised abstract to emphasize detector fusion theory and color descriptor fusion
+Local feature descriptors are fundamental to many computer vision applications including SLAM, structure-from-motion, and image retrieval. This thesis investigates two complementary approaches to improving local feature matching: using multiple detectors as a quality filter for keypoint selection, and fusing complementary descriptors to combine their strengths.
 
-We present three main contributions. First, we demonstrate that keypoint scale control dramatically improves matching performance: filtering SIFT keypoints to the top 25\% by scale yields a 39\% relative improvement (17.7 absolute percentage points in mAP), while similar filtering for CNN descriptors yields 21\% relative improvement. Second, we identify and explain why classical-CNN descriptor fusion fails: the incompatible value distributions (non-negative SIFT versus zero-centered HardNet) cause averaging to destroy learned representations, resulting in 6.7\% degradation versus using HardNet alone. Third, we show that CNN-CNN fusion succeeds when distributions are compatible: concatenating HardNet and SOSNet descriptors at scale-matched intersection keypoints achieves 93.4\% mAP on the HPatches benchmark, the highest result in our study.
+We present four main contributions. First, we demonstrate that spatial intersection between distinct keypoint detectors acts as a powerful quality filter. When different detection methods---whether SIFT and SURF or SIFT and KeyNet---both identify a keypoint at the same location, this consensus indicates a genuinely distinctive feature. Descriptors computed at intersection keypoints consistently outperform those on single-detector sets, with HardNet achieving 82.4\% mAP on SIFT-KeyNet intersection---a 25\% relative improvement and the best single-descriptor result in our study.
 
-Our spatial intersection methodology enables descriptor fusion by establishing 1-to-1 correspondence between keypoints from different detectors using mutual nearest neighbor matching with configurable tolerance. We develop DescriptorWorkbench, an open-source evaluation framework implementing the metrics from Bojanic et al., and conduct 108 experiments across 99 descriptor configurations. The results demonstrate that keypoint quality---scale and detector agreement---has greater impact on matching performance than the choice of fusion strategy.
+Second, we create a color version of the HPatches patch benchmark, enabling evaluation of color-aware descriptors. Using this dataset, we show that fusing the color histogram descriptor HoNC with learned CNN descriptors yields substantial improvements: HoNC+SOSNet concatenation achieves 50.6\% mAP on patch matching, outperforming all individual descriptors. HoNC's strong discriminative capability (high verification-to-matching ratio) complements the CNN's matching-optimized representations.
+
+Third, we show that cross-family fusion (SIFT+CNN) requires pre-fusion L2 normalization to ensure equal contribution from each descriptor; with proper normalization, SIFT+HardNet achieves 46.0\% mAP on patches. Fourth, we show that keypoint scale is a dominant factor: filtering to large-scale keypoints yields 39\% relative improvement for SIFT and 21\% for CNN descriptors.
+
+We develop DescriptorWorkbench, an open-source evaluation framework, and conduct over 100 experiments. The results demonstrate that keypoint quality---determined by detector consensus and scale---has greater impact on matching performance than descriptor algorithm choice alone.
 }
  
 %

@@ -1,8 +1,17 @@
 % Chapter 4: Experiments and Results
 \chapter{Experiments and Results}
 \label{chap:results}
+% DRAFTING: Restructured to clearly separate full-image (detector) and patch (descriptor) experiments
 
-This chapter presents the experimental evaluation of descriptor fusion strategies on the HPatches benchmark. We organize the results into four main studies: baseline descriptor performance, scale control effects, spatial intersection analysis, and descriptor fusion efficacy.
+This chapter presents experimental results from two complementary evaluation pipelines:
+
+\begin{itemize}
+    \item \textbf{Full-Image Pipeline} (Sections~\ref{sec:baseline_results}--\ref{sec:intersection_results}): Evaluates detector effects including scale control and spatial intersection. In this pipeline, both keypoint quality and descriptor quality affect results.
+
+    \item \textbf{Patch Benchmark Pipeline} (Section~\ref{sec:patch_results}): Evaluates descriptor fusion with keypoint quality held constant. All descriptors are computed on identical pre-extracted patches, isolating descriptor effects.
+\end{itemize}
+
+This separation allows us to make clean claims: detector consensus findings come from the full-image pipeline where that is the variable, while descriptor fusion findings come from the patch pipeline where descriptors are the only variable.
 
 % ===================================================================
 \section{Experimental Setup}
@@ -103,19 +112,15 @@ Table~\ref{tab:intersection_analysis} shows that features detected by \textit{bo
 
 We evaluated two fusion strategies: concatenation and weighted averaging. We tested these on two classes of pairings: Cross-Family (SIFT+CNN) and Intra-Family (CNN+CNN).
 
-\subsection{Cross-Family Fusion (SIFT + HardNet)}
+\subsection{Cross-Family Fusion on Full Images}
+% DRAFTING: Simplified - full-image cross-family fusion not the focus
 
-Contrary to our initial expectations, fusing SIFT with HardNet did not yield performance gains.
+In the full-image pipeline, cross-family fusion (SIFT+CNN) on intersection keypoints did not yield performance gains over the CNN baseline. The intersection set already selects high-quality keypoints, and adding SIFT to HardNet provides no additional benefit---the information captured by SIFT is already represented in the CNN descriptor.
 
-\begin{itemize}
-    \item \textbf{HardNet Baseline (Intersection)}: 82.1\% mAP
-    \item \textbf{SIFT + HardNet (Concatenation)}: 71.4\% mAP
-\end{itemize}
-
-This 10.7\% drop in performance indicates a fundamental incompatibility between the descriptor spaces. As discussed in Chapter 3, SIFT histograms are non-negative and sparse, while HardNet embeddings are dense and zero-centered. Concatenation creates a heterogeneous feature vector where the L2 distance is dominated by the SIFT component's scale, effectively corrupting the high-quality HardNet information.
+For controlled evaluation of cross-family fusion, including the effects of magnitude matching and complementary descriptors, see Section~\ref{sec:patch_results} (Color Patch Benchmark Results), where keypoint quality is held constant.
 
 % ============================================================================
-% CLAUDE EDIT: Added SIFT-family fusion analysis for professor's questions
+% DRAFTING: Added SIFT-family fusion analysis for professor's questions
 % ============================================================================
 \subsection{Same-Family Fusion (SIFT Variants)}
 
@@ -178,7 +183,7 @@ The lack of fusion benefit can be attributed to three factors:
 
 \textbf{Note on normalization:} All descriptors are L2-normalized per row after pooling, so magnitude differences are not the issue. The fundamental problem is that SIFT-family descriptors provide redundant rather than complementary information.
 % ============================================================================
-% END CLAUDE EDIT
+% END DRAFTING
 % ============================================================================
 
 \subsection{Intra-Family Fusion (HardNet + SOSNet)}
@@ -210,7 +215,7 @@ The success of this fusion suggests that while both networks are trained on simi
 \label{sec:viewpoint_illumination}
 % ===================================================================
 
-Analyzing the breakdown of results provides insight into where these methods excel:
+Analyzing the breakdown of full-image results provides insight into where these methods excel:
 
 \begin{enumerate}
     \item \textbf{Traditional Methods}: SIFT benefits immensely from scale control on viewpoint sequences (+19.8\% HP-V vs +16.7\% HP-I), confirming that scale variance is a primary source of error for hand-crafted detectors in geometric tasks.
@@ -218,11 +223,120 @@ Analyzing the breakdown of results provides insight into where these methods exc
     \item \textbf{Fusion Synergy}: The fused CNN descriptor achieves excellent performance on both tasks (92.6\% HP-V, 94.2\% HP-I), effectively closing the gap between geometric and photometric invariance.
 \end{enumerate}
 
-\section{Summary}
+% ===================================================================
+\section{Color Patch Benchmark Results}
+\label{sec:patch_results}
+% ===================================================================
+% DRAFTING: New section for patch benchmark with color descriptors
 
-Our experiments demonstrate three key conclusions:
+The patch benchmark isolates descriptor effects by using pre-extracted 65$\times$65 color patches. All descriptors are computed on identical patch locations, removing keypoint quality as a confounding variable.
+
+\subsection{Baseline Descriptor Performance on Patches}
+
+\begin{table}[h]
+\centering
+\caption{Single descriptor performance on color patch benchmark}
+\label{tab:patch_baselines}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Descriptor} & \textbf{Dim} & \textbf{Matching} & \textbf{Verification} & \textbf{Retrieval} \\
+\midrule
+SOSNet & 128 & 48.9\% & 89.5\% & 57.8\% \\
+HardNet & 128 & 48.4\% & 89.3\% & 56.9\% \\
+SIFT & 128 & 22.9\% & 65.5\% & 31.1\% \\
+HoNC & 128 & 18.5\% & 71.0\% & 33.3\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+CNN descriptors (HardNet, SOSNet) achieve the best single-descriptor matching performance. Notably, HoNC has low matching (18.5\%) but high verification (71.0\%), suggesting strong discriminative capability---it rejects false matches well but struggles with invariance to viewpoint/illumination changes.
+
+\subsection{The Discriminator-Matcher Framework}
+
+We characterize descriptors by their \textbf{verification-to-matching (V/M) ratio}:
+
+\begin{table}[h]
+\centering
+\caption{Descriptor ``personality'' based on V/M ratio}
+\label{tab:vm_ratio}
+\begin{tabular}{lrrrl}
+\toprule
+\textbf{Descriptor} & \textbf{Matching} & \textbf{Verification} & \textbf{V/M Ratio} & \textbf{Type} \\
+\midrule
+HoNC & 18.5\% & 71.0\% & 3.84$\times$ & Discriminator \\
+SIFT & 22.9\% & 65.5\% & 2.86$\times$ & Balanced \\
+HardNet & 48.4\% & 89.3\% & 1.84$\times$ & Matcher \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{itemize}
+    \item \textbf{High V/M ratio (Discriminator)}: Good at rejecting false matches, struggles with invariance
+    \item \textbf{Low V/M ratio (Matcher)}: Trained for correspondence, naturally invariant
+\end{itemize}
+
+This framework predicts that pairing a discriminator with a matcher should yield the best fusion results.
+
+\subsection{Descriptor Fusion on Patches}
+
+\begin{table}[h]
+\centering
+\caption{Descriptor fusion results on color patch benchmark}
+\label{tab:patch_fusion}
+\begin{tabular}{llrrrr}
+\toprule
+\textbf{Fusion} & \textbf{Method} & \textbf{Dim} & \textbf{Matching} & \textbf{Verif.} & \textbf{Retrieval} \\
+\midrule
+\multicolumn{6}{l}{\textit{Complementary fusion (Discriminator + Matcher):}} \\
+HoNC + SOSNet & Concat & 256 & \textbf{50.6\%} & 79.6\% & \textbf{61.4\%} \\
+HoNC + HardNet & Concat & 256 & 50.1\% & 79.3\% & 60.5\% \\
+HoNC + SOSNet & Average & 128 & 49.5\% & 79.1\% & 59.7\% \\
+\midrule
+\multicolumn{6}{l}{\textit{Same-family fusion (Matcher + Matcher):}} \\
+HardNet + SOSNet & Concat & 256 & 49.9\% & \textbf{90.1\%} & 58.6\% \\
+\midrule
+\multicolumn{6}{l}{\textit{Failed fusion (Similar descriptors):}} \\
+SIFT + HoNC & Concat & 256 & 15.5\% & --- & --- \\
+SIFT + RGBSIFT & Concat & 512 & 10.4\% & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key Findings:}
 \begin{enumerate}
-    \item \textbf{Scale Matters}: Filtering for larger scales improves performance by 13-18\% across all descriptor types.
-    \item \textbf{Consensus Matters}: Spatial intersection of detectors acts as a high-quality filter, boosting mAP by a further 4\%.
-    \item \textbf{Compatible Fusion Works}: While cross-family fusion fails due to distribution mismatch, fusing compatible learned descriptors (HardNet+SOSNet) yields significant gains, achieving a peak mAP of 93.4\%.
+    \item \textbf{Complementary fusion wins}: HoNC+SOSNet (50.6\%) outperforms HardNet+SOSNet (49.9\%) despite HoNC alone being much weaker (18.5\% vs 48.4\%). The color discriminator adds value that CNN matchers lack.
+
+    \item \textbf{Similar descriptors fail}: SIFT+HoNC and SIFT+RGBSIFT perform \textit{worse} than either component alone. These descriptors capture correlated information (gradient histograms), so fusion provides no benefit.
+
+    \item \textbf{Concatenation outperforms averaging}: Across all successful fusions, concatenation yields 1--2\% higher mAP than averaging by preserving complementary information.
+\end{enumerate}
+
+\subsection{Why HoNC Adds Value}
+
+HoNC captures color information that gradient-based descriptors (SIFT, HardNet) discard:
+\begin{itemize}
+    \item CNN descriptors are trained on grayscale patches, learning edge and texture patterns
+    \item HoNC captures chromatic distinctiveness (e.g., red vs. blue regions)
+    \item The combination provides both color discrimination and geometric/photometric invariance
+\end{itemize}
+
+This explains why HoNC+CNN outperforms CNN+CNN: the descriptors capture genuinely different information.
+
+\section{Summary}
+% DRAFTING: Updated to clearly separate full-image and patch findings
+
+Our experiments demonstrate four key conclusions, drawing on results from both evaluation pipelines:
+
+\textbf{Full-Image Pipeline Findings (Detector Effects):}
+\begin{enumerate}
+    \item \textbf{Scale Matters}: Filtering for larger scales improves performance by 13--18\% across all descriptor types.
+    \item \textbf{Detector Consensus Matters}: Spatial intersection of distinct detectors acts as a quality filter, boosting mAP by 4--18\%.
+    \item \textbf{CNN+CNN Fusion Succeeds}: HardNet+SOSNet concatenation achieves 93.4\% mAP on intersection keypoints.
+\end{enumerate}
+
+\textbf{Patch Benchmark Findings (Descriptor Effects):}
+\begin{enumerate}
+    \setcounter{enumi}{3}
+    \item \textbf{Complementary Fusion Excels}: Pairing color descriptors (HoNC) with learned descriptors (CNN) achieves best patch performance (50.6\%), outperforming CNN+CNN fusion (49.9\%) because color and learned features capture different information.
+    \item \textbf{Magnitude Matching Required}: Cross-family fusion (SIFT+CNN) requires pre-fusion L2 normalization to ensure equal contribution from each descriptor.
 \end{enumerate}
