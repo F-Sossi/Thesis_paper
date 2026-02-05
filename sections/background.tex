@@ -1,7 +1,7 @@
 % Chapter 2: Background and Related Work
 % TODO: Remove DRAFTING comments before final submission
 
-This chapter reviews the foundations of local feature detection and description, covering traditional and learned approaches, descriptor fusion methods, and evaluation benchmarks.
+This chapter reviews local feature detection and description, covering traditional and learned approaches, descriptor fusion methods, and evaluation benchmarks.
 
 \section{Local Feature Detection}
 
@@ -15,7 +15,7 @@ The SIFT (Scale-Invariant Feature Transform) detector~\cite{lowe2004distinctive}
     \item \textbf{Sub-pixel localization}: Taylor expansion refines keypoint position
 \end{itemize}
 
-Other traditional detectors include Harris corners, FAST, and SURF~\cite{bay2006surf}, each with different trade-offs between repeatability and computational cost.
+Other traditional detectors include Harris corners, FAST, and SURF~\cite{lee2016survey,bay2006surf}, each with different trade-offs between repeatability and computational cost.
 
 \subsection{Learned Detectors}
 
@@ -27,7 +27,7 @@ KeyNet~\cite{barroso2019key} represents a hybrid approach combining hand-crafted
     \item \textbf{Multi-scale}: Operates on image pyramids similar to SIFT
 \end{itemize}
 
-KeyNet was designed specifically for pairing with learned descriptors like HardNet and SOSNet, achieving state-of-the-art repeatability on HPatches.
+KeyNet was designed specifically for pairing with learned descriptors like HardNet and SOSNet, achieving state-of-the-art repeatability on HPatches~\cite{barroso2019key}.
 
 \subsection{End-to-End Learned Pipelines}
 
@@ -39,7 +39,7 @@ While KeyNet focuses on detection to be paired with separate descriptors, other 
     \item \textbf{ALIKE}~\cite{zhao2023aliked}: A lightweight framework that combines the strengths of handcrafted and learned methods, using a deformable transformation module to improve geometric invariance while maintaining high computational efficiency.
 \end{itemize}
 
-These end-to-end methods offer a compelling alternative to the detect-then-describe pipeline, though they often require strictly coupled detector-descriptor pairs, unlike the mix-and-match flexibility we investigate with KeyNet and SIFT.
+These end-to-end methods provide an alternative to the detect-then-describe pipeline, but they often require strictly coupled detector-descriptor pairs, unlike the mix-and-match flexibility we investigate with KeyNet and SIFT.
 
 \subsection{Detector Characteristics}
 
@@ -81,7 +81,7 @@ where $d_{\sigma_i}$ is the SIFT descriptor computed at scale $\sigma_i$. DSP im
 
 \subsubsection{RootSIFT}
 
-RootSIFT applies element-wise square root after L1 normalization, which is equivalent to using the Hellinger kernel:
+RootSIFT applies element-wise square root after L1 normalization, which is equivalent to using the Hellinger kernel~\cite{arandjelovic2012three}:
 
 \begin{equation}
     d_{\text{RootSIFT}} = \sqrt{d_{\text{SIFT}} / \|d_{\text{SIFT}}\|_1}
@@ -126,7 +126,7 @@ A critical consideration for descriptor fusion is \textit{magnitude matching}. D
 \midrule
 SIFT & [0, 512] & [0, 0.3] & Gradient histogram counts \\
 RootSIFT & [0, 22] & [0, 0.4] & After sqrt transform \\
-HoNC & [0, 1] & [0, 0.3] & Normalized color histogram \\
+HoNC~\cite{olson2016keypoint} & [0, 1] & [0, 0.3] & Normalized color histogram \\
 HardNet & [-0.3, +0.3] & [-0.3, +0.3] & Trained with L2 output \\
 SOSNet & [-0.3, +0.3] & [-0.3, +0.3] & Trained with L2 output \\
 \bottomrule
@@ -172,7 +172,7 @@ Prior work has explored:
     \item Ensemble methods in image matching challenges
 \end{itemize}
 
-However, \textit{cross-detector early fusion}---averaging or concatenating descriptors from keypoints detected by different methods---remains unexplored. This thesis addresses this gap through our spatial intersection methodology.
+However, \textit{cross-detector early fusion}---averaging or concatenating descriptors from keypoints detected by different methods---remains largely unexplored. This thesis addresses this gap through our spatial intersection methodology.
 
 \section{Evaluation Benchmarks}
 
@@ -183,7 +183,7 @@ The HPatches benchmark~\cite{balntas2017hpatches} provides:
     \item 116 sequences with ground-truth homographies
     \item 59 viewpoint sequences (geometric changes)
     \item 57 illumination sequences (photometric changes)
-    \item Pre-extracted 65$\times$65 grayscale patches (original benchmark)
+    \item Pre-extracted 65$\times$65 gray scale patches (original benchmark)
     \item Full images for keypoint-based evaluation
 \end{itemize}
 

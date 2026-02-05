@@ -5,7 +5,7 @@ This chapter interprets our experimental findings, explaining the underlying cau
 
 \section{Why Scale Control Matters}
 
-Our experiments demonstrate that scale control yields dramatic improvements: +39\% relative for SIFT-family descriptors and +21\% relative for CNN descriptors. We attribute this to several factors:
+Our experiments show that scale control yields large improvements: +39\% relative for SIFT-family descriptors and +21\% relative for CNN descriptors. We attribute this to several factors:
 
 \subsection{Information Content}
 
@@ -27,7 +27,7 @@ Small-scale keypoints are more susceptible to:
 
 \subsection{Practical Recommendation}
 
-For production systems requiring high matching accuracy, we recommend filtering to the top 25\% of keypoints by scale. The trade-off is reduced keypoint count (645K vs 2.5M in our experiments), but the quality improvement substantially outweighs the coverage reduction.
+For systems requiring high matching accuracy, we recommend filtering to the top 25\% of keypoints by scale. The trade-off is reduced keypoint count (645K vs 2.5M in our experiments), but the quality improvement outweighs the coverage reduction.
 
 \section{Understanding Fusion: Magnitude Matching}
 % DRAFTING: Simplified to focus on technical requirement, not bug discovery
@@ -67,7 +67,7 @@ Even with proper normalization, SIFT+CNN fusion (46.0\%) underperforms HoNC+CNN 
     \item Complementary descriptors provide more benefit than similar ones
 \end{enumerate}
 
-The key insight is that fusion success depends on \textit{complementarity}: descriptors that capture different information combine better than those capturing similar information.
+Fusion success depends on \textit{complementarity}: descriptors that capture different information combine better than those capturing similar information.
 
 \section{Why CNN+CNN Fusion Succeeds}
 
@@ -113,7 +113,7 @@ Keypoints detected by both SIFT and KeyNet (spatial intersection) achieve higher
     \item HardNet on intersection: 82.1\% mAP (+17.6\%)
 \end{itemize}
 
-We conducted a systematic investigation to understand whether this improvement stems from the \textit{keypoints} being higher quality or the \textit{descriptors} computed on them being more distinctive.
+We conducted a systematic investigation to determine whether this improvement stems from higher-quality \textit{keypoints} or more distinctive \textit{descriptors}.
 
 \subsection{Investigation Methodology}
 
@@ -142,7 +142,7 @@ The investigation revealed that the improvement comes from \textbf{keypoint qual
 
 \subsection{Why Detector Agreement Indicates Quality}
 
-The intersection filters for keypoints that are \textit{genuinely salient image features} rather than detector-specific artifacts:
+The intersection filters for keypoints that are \textit{salient image features} rather than detector-specific artifacts:
 
 \begin{itemize}
     \item \textbf{Cross-validation}: If both a blob detector (KeyNet) and an edge/corner detector (SIFT) independently identify the same location as interesting, it likely corresponds to a real image structure.
@@ -163,7 +163,7 @@ Rather, the improvement occurs because:
     \item Higher repeatability leads to more correct correspondences being available for matching
 \end{enumerate}
 
-This finding has practical implications: \textbf{keypoint selection strategy can matter as much as descriptor algorithm choice}. The 17\% gain from intersection filtering is comparable to the gap between SIFT and state-of-the-art CNN descriptors.
+This finding has practical implications: \textbf{keypoint selection strategy can matter as much as descriptor algorithm choice}. The 17\% gain from intersection filtering is comparable to the gap between SIFT and CNN descriptors.
 
 \section{HP-V vs HP-I Patterns}
 
@@ -177,7 +177,7 @@ Our results show opposite patterns:
 
 \subsection{Explanation}
 
-CNN descriptors are trained on patches with photometric augmentations (brightness, contrast, gamma), leading to learned illumination invariance. Traditional descriptors rely on gradient directions, which are naturally invariant to multiplicative illumination changes but not to more complex photometric transformations.
+CNN descriptors are trained on patches with photometric augmentations (brightness, contrast, gamma), leading to learned illumination invariance~\cite{mishchuk2017working,tian2019sosnet}. Traditional descriptors rely on gradient directions, which are naturally invariant to multiplicative illumination changes but not to more complex photometric transformations.
 
 \section{Limitations}
 

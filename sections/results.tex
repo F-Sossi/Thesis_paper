@@ -12,7 +12,7 @@ This chapter presents experimental results from two complementary evaluation pip
     \item \textbf{Patch Benchmark Pipeline} (Section~\ref{sec:patch_results}): Evaluates descriptor fusion with keypoint quality held constant. All descriptors are computed on identical pre-extracted patches, isolating descriptor effects.
 \end{itemize}
 
-This separation allows us to make clean claims: detector consensus findings come from the full-image pipeline where that is the variable, while descriptor fusion findings come from the patch pipeline where descriptors are the only variable.
+This separation keeps the claims aligned with the variables: detector consensus findings come from the full-image pipeline, while descriptor fusion findings come from the patch pipeline where descriptors are the only variable.
 
 % ===================================================================
 \section{Experimental Setup}
@@ -52,14 +52,14 @@ SOSNet & keynet\_8000 & 64.3\% & 63.4\% & 65.2\% \\
 \end{tabular}
 \end{table}
 
-As expected, the learned descriptors (HardNet, SOSNet) significantly outperform SIFT, achieving approximately 20 percentage points higher mAP. SIFT shows a slight preference for viewpoint changes, while the CNN descriptors perform slightly better on illumination sequences.
+The learned descriptors (HardNet, SOSNet) outperform SIFT by roughly 20 percentage points of mAP. SIFT shows a slight preference for viewpoint changes, while the CNN descriptors perform slightly better on illumination sequences.
 
 % ===================================================================
 \section{Impact of Scale Control}
 \label{sec:scale_control}
 % ===================================================================
 
-One of the central hypotheses of this thesis is that keypoint scale is a dominant factor in matching performance. By filtering the keypoint sets to retain only the largest 25\% of features (Scale-Controlled sets), we observe dramatic performance improvements across all descriptor types.
+A core hypothesis is that keypoint scale is a dominant factor in matching performance. By filtering the keypoint sets to retain only the largest 25\% of features (Scale-Controlled sets), we observe large performance improvements across all descriptor types.
 
 \begin{table}[h]
 \centering
@@ -80,7 +80,7 @@ One of the central hypotheses of this thesis is that keypoint scale is a dominan
 \end{tabular}
 \end{table}
 
-The results in Table~\ref{tab:scale_control} are striking. Simply removing small, unstable keypoints improves SIFT's performance by over 18 percentage points, bringing it close to the baseline performance of HardNet. For HardNet, scale control yields a 13.6\% gain, pushing it to 78.1\% mAP. This confirms that descriptor distinctiveness is strongly correlated with patch size.
+Table~\ref{tab:scale_control} shows that removing small, unstable keypoints improves SIFT by over 18 percentage points, bringing it close to the baseline performance of HardNet. For HardNet, scale control yields a 13.6\% gain, pushing it to 78.1\% mAP. This indicates that descriptor distinctiveness is strongly correlated with patch size.
 
 % ===================================================================
 \section{Impact of Spatial Intersection}
@@ -104,7 +104,7 @@ Scale-Controlled & 78.1\% & 76.9\% & 79.3\% \\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:intersection_analysis} shows that features detected by \textit{both} detectors are of higher quality than those detected by KeyNet alone, even after scale filtering. The intersection set yields an additional 4.0\% improvement in mAP, suggesting that detector consensus is a powerful proxy for feature repeatability.
+Table~\ref{tab:intersection_analysis} shows that features detected by \textit{both} detectors are higher quality than those detected by KeyNet alone, even after scale filtering. The intersection set yields an additional 4.0\% improvement in mAP, suggesting that detector consensus is a proxy for feature repeatability.
 
 % ===================================================================
 \section{Descriptor Fusion Results}
@@ -207,7 +207,7 @@ HardNet + SOSNet & Weighted Avg & 92.3\% & 91.4\% & 93.2\% \\
 \end{tabular}
 \end{table}
 
-\textbf{Key Finding:} The concatenation of HardNet and SOSNet achieves a state-of-the-art mAP of \textbf{93.4\%}. This represents an 11.3 percentage point improvement over the single best descriptor (HardNet).
+\textbf{Key Finding:} The concatenation of HardNet and SOSNet achieves \textbf{93.4\%} mAP, an 11.3 percentage point improvement over the single best descriptor (HardNet).
 \todo[inline]{Verify 93.4\% matches database query and is consistent with abstract/conclusion}
 
 The success of this fusion suggests that while both networks are trained on similar data, they learn complementary representations of the image patches. Concatenation preserves this distinct information, whereas averaging tends to dilute it slightly (92.3\% vs 93.4\%).
@@ -277,7 +277,7 @@ HardNet & 48.4\% & 89.3\% & 1.84$\times$ & Matcher \\
     \item \textbf{Low V/M ratio (Matcher)}: Trained for correspondence, naturally invariant
 \end{itemize}
 
-This framework predicts that pairing a discriminator with a matcher should yield the best fusion results.
+This framework predicts that pairing a discriminator with a matcher yields the best fusion results.
 
 \subsection{Descriptor Fusion on Patches}
 

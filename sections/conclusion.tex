@@ -3,25 +3,25 @@
 
 \section{Summary of Contributions}
 
-This thesis investigated detector consensus and descriptor fusion for local feature matching, making the following contributions:
+This thesis investigated detector consensus and descriptor fusion for local feature matching, with the following contributions:
 
 \begin{enumerate}
-    \item \textbf{Detector Intersection as Quality Filter}: We demonstrated that keypoints detected by multiple distinct detectors are more distinctive than those found by any single detector. This effect holds for both SIFT-SURF and SIFT-KeyNet intersections, with HardNet achieving 82.4\% mAP on intersection keypoints---a 25\% relative improvement.
+    \item \textbf{Detector Intersection as Quality Filter}: Keypoints detected by multiple distinct detectors are more distinctive than those found by any single detector. This effect holds for both SIFT-SURF and SIFT-KeyNet intersections, with HardNet achieving 82.4\% mAP on intersection keypoints---a 25\% relative improvement.
 
     \item \textbf{Color HPatches Benchmark}: We created a color version of the HPatches patch benchmark by re-extracting 65$\times$65 color patches from original images. This enables evaluation of color descriptors like HoNC.
 
-    \item \textbf{Magnitude Matching for Cross-Family Fusion}: We show that cross-family fusion (SIFT+CNN) requires pre-fusion L2 normalization to ensure equal contribution from each descriptor. With proper normalization, SIFT+HardNet achieves 46.0\% mAP on patches.
+    \item \textbf{Magnitude Matching for Cross-Family Fusion}: Cross-family fusion (SIFT+CNN) requires pre-fusion L2 normalization to ensure equal contribution from each descriptor. With proper normalization, SIFT+HardNet achieves 46.0\% mAP on patches.
 
-    \item \textbf{Complementary Descriptor Fusion}: We showed that pairing a ``discriminator'' (HoNC, high verification-to-matching ratio) with a ``matcher'' (CNN) yields substantial improvements. HoNC+SOSNet concatenation achieves 50.6\% mAP on the color patch benchmark, outperforming all individual descriptors.
+    \item \textbf{Complementary Descriptor Fusion}: Pairing a ``discriminator'' (HoNC, high verification-to-matching ratio) with a ``matcher'' (CNN) yields substantial improvements. HoNC+SOSNet concatenation achieves 50.6\% mAP on the color patch benchmark, outperforming all individual descriptors.
 
-    \item \textbf{Scale Control Methodology}: We demonstrated that filtering keypoints by scale yields dramatic improvements: +39\% relative for SIFT-family descriptors and +21\% relative for CNN descriptors.
+    \item \textbf{Scale Control Methodology}: Filtering keypoints by scale yields large improvements: +39\% relative for SIFT-family descriptors and +21\% relative for CNN descriptors.
 
     \item \textbf{DescriptorWorkbench Framework}: We developed an open-source evaluation framework implementing image matching, keypoint verification, and keypoint retrieval metrics from Bojanic et al.~\cite{bojanic2020comparison}, supporting both full-image and patch-based evaluation.
 \end{enumerate}
 
 \section{Key Findings}
 
-Our experiments reveal several important insights for local feature matching:
+Our experiments reveal several insights for local feature matching:
 
 \begin{itemize}
     \item \textbf{Quality over quantity}: Fewer, better keypoints (scale-filtered or intersection-filtered) outperform larger sets of lower-quality keypoints.
@@ -91,6 +91,6 @@ This thesis demonstrates two complementary approaches to improving local feature
 
 A key technical finding is that cross-family fusion (SIFT+CNN) requires proper magnitude matching through pre-fusion L2 normalization. The initial fusion failures were not due to fundamental incompatibility between descriptor families, but rather a fixable magnitude mismatch problem.
 
-More broadly, our findings suggest that the computer vision community should pay greater attention to keypoint quality. The 39\% improvement from scale control and 25\% improvement from detector consensus exceed most algorithmic advances, yet these filtering strategies are rarely discussed in the literature. We hope this work encourages more research into keypoint selection strategies alongside descriptor algorithm development.
+More broadly, our findings suggest that keypoint quality deserves more attention. The 39\% improvement from scale control and 25\% improvement from detector consensus exceed many algorithmic advances, yet these filtering strategies are rarely discussed in the literature. We hope this work encourages more research into keypoint selection strategies alongside descriptor algorithm development.
 
 The DescriptorWorkbench framework, color HPatches benchmark, and all experimental configurations are available as open-source software, enabling reproduction and extension of these results.

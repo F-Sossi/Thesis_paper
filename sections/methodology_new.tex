@@ -6,7 +6,7 @@ This chapter describes our methodology for cross-detector descriptor fusion, inc
 \section{DescriptorWorkbench Framework}
 \todo[inline]{Add hardware/software specifications: GPU model, CUDA version, CPU, RAM, OpenCV version, LibTorch version, OS}
 
-We developed DescriptorWorkbench, an open-source evaluation framework for local feature descriptor research. The framework provides:
+We developed DescriptorWorkbench, an open-source evaluation framework for local feature descriptor research. It provides:
 
 \begin{itemize}
     \item \textbf{Modular architecture}: Pluggable descriptor extractors, pooling strategies, and matchers
@@ -17,7 +17,7 @@ We developed DescriptorWorkbench, an open-source evaluation framework for local 
 
 \subsection{Supported Descriptors}
 
-The framework implements the following descriptor types, utilizing a hybrid architecture of OpenCV for traditional methods and LibTorch for deep learning models:
+The framework implements the following descriptor types, using OpenCV for traditional methods and LibTorch for deep learning models:
 
 \begin{table}[h]
 \centering
@@ -35,7 +35,7 @@ SURF & Traditional & 64/128 & OpenCV \\
 HoNC & Color & 128 & Custom \\
 HardNet & Learned & 128 & LibTorch (C++) \\
 SOSNet & Learned & 128 & LibTorch (C++) \\
-L2-Net & Learned & 128 & LibTorch (C++) \\
+L2-Net~\cite{tian2017l2net} & Learned & 128 & LibTorch (C++) \\
 Composite & Fusion & varies & Custom \\
 \bottomrule
 \end{tabular}
@@ -55,7 +55,7 @@ Experiment results are stored in SQLite with the following key tables:
 \subsection{Two Evaluation Pipelines}
 % DRAFTING: Added to clarify which pipeline is used for which claims
 
-We employ two complementary evaluation pipelines to isolate different experimental variables:
+We use two complementary evaluation pipelines to isolate different experimental variables:
 
 \subsubsection{Full-Image Pipeline}
 
@@ -80,7 +80,7 @@ By using identical patch locations for all descriptors, this pipeline isolates d
 \subsubsection{Color HPatches Patch Benchmark}
 % DRAFTING: Complete re-implementation documentation
 
-The original HPatches patch benchmark provides grayscale 65$\times$65 patches, which prevents evaluation of color descriptors like HoNC. The original keypoint locations were not publicly released, so we developed \texttt{patch\_dataset\_builder}, a tool that reconstructs the benchmark methodology from scratch.
+The original HPatches patch benchmark provides grayscale 65$\times$65 patches, which prevents evaluation of color descriptors like HoNC. The original keypoint locations were not publicly released, so we developed \texttt{patch\_dataset\_builder} to reconstruct the benchmark methodology.
 
 \textbf{Reconstruction Methodology:}
 \begin{enumerate}
@@ -108,30 +108,30 @@ SIFT Retrieval AP & 31.98\% & 31.1\% & --0.9\% \\
 \end{tabular}
 \end{table}
 
-The rebuilt benchmark produces slightly lower matching scores (22.9\% vs 25.47\%), indicating marginally harder patches, while verification and retrieval metrics are nearly identical. This validates that our reconstruction captures the essential characteristics of the original benchmark while enabling color descriptor evaluation.
+The rebuilt benchmark produces slightly lower matching scores (22.9\% vs 25.47\%), indicating marginally harder patches, while verification and retrieval metrics are nearly identical. This supports that the reconstruction captures the essential characteristics of the original benchmark while enabling color descriptor evaluation.
 
 \subsection{Deep Learning Integration}
 
-A significant engineering challenge in this work was integrating research-grade deep learning models (typically implemented in Python/PyTorch) into a high-performance C++ evaluation pipeline to ensure fair comparison with optimized traditional descriptors like SIFT.
+Integrating research-grade deep learning models (typically implemented in Python/PyTorch) into a high-performance C++ evaluation pipeline was necessary to compare against optimized traditional descriptors like SIFT.
 
 \subsubsection{Hybrid Architecture}
 
-We developed a hybrid pipeline that leverages the best tools for each stage:
+We use a hybrid pipeline that leverages the best tools for each stage:
 
 \begin{itemize}
-    \item \textbf{Keypoint Detection (Python/Kornia)}: KeyNet detection is performed offline using Python scripts that interface with the Kornia library. This ensures 100\% fidelity to the reference implementation and avoids reimplementation errors. Coordinates are serialized to the SQLite database for reuse.
+    \item \textbf{Keypoint Detection (Python/Kornia)}: KeyNet detection is performed offline using Python scripts that interface with the Kornia library~\cite{riba2020survey}. This ensures 100\% fidelity to the reference implementation and avoids reimplementation errors. Coordinates are serialized to the SQLite database for reuse.
     \item \textbf{Descriptor Extraction (C++/LibTorch)}: For descriptor extraction, which must occur in the inner loop of matching experiments, we integrated the LibTorch (PyTorch C++) frontend directly into our application.
 \end{itemize}
 
 \subsubsection{Rejection of ONNX}
 
-Initially, we attempted to deploy models using the ONNX (Open Neural Network Exchange) format run via OpenCV's DNN module. However, this approach proved unsuitable for our needs:
+We initially attempted to deploy models using the ONNX (Open Neural Network Exchange) format via OpenCV's DNN module. This approach proved unsuitable:
 \begin{itemize}
     \item \textbf{Operator Incompatibility}: Key models like HardNet use specific normalization layers (e.g., \texttt{InstanceNorm}) and control structures that were not fully supported by the OpenCV ONNX importer at the time of development.
     \item \textbf{Performance Stability}: We observed inconsistent behavior and occasional crashes with complex graphs exported from newer PyTorch versions.
 \end{itemize}
 
-Consequently, we deprecated the ONNX pipeline in favor of TorchScript. Models are exported to the \texttt{.pt} format and loaded via \texttt{torch::jit::load} within our C++ \texttt{LibTorchWrapper}. This provides native PyTorch execution speed and guarantees numerical equivalence to the Python training code, while operating within the memory space of our C++ benchmarking tool.
+We deprecated the ONNX pipeline in favor of TorchScript. Models are exported to the \texttt{.pt} format and loaded via \texttt{torch::jit::load} within our C++ \texttt{LibTorchWrapper}. This provides native PyTorch execution and numerical equivalence to the Python training code, while running inside the C++ benchmarking tool.
 
 \section{Spatial Intersection Algorithm}
 \label{sec:intersection_algorithm}
@@ -161,7 +161,7 @@ Given two keypoint sets $K_A$ (e.g., SIFT-detected) and $K_B$ (e.g., KeyNet-dete
 
 \subsection{Algorithm Properties}
 
-The MNN algorithm guarantees several desirable properties:
+The MNN algorithm guarantees several properties:
 
 \begin{itemize}
     \item \textbf{1-to-1 correspondence}: Each keypoint matched at most once
@@ -195,7 +195,7 @@ The matched keypoints retain their original scale and orientation properties (st
 
 \subsection{Tolerance Selection}
 
-Following Mikolajczyk and Schmid's detector evaluation methodology, we use a default tolerance of $\tau = 3.0$ pixels.
+Following Mikolajczyk and Schmid's detector evaluation methodology, we use a default tolerance of $\tau = 3.0$ pixels~\cite{mikolajczyk2003evaluation}.
 \todo[inline]{Add Mikolajczyk \& Schmid 2005 citation to bibliography: A performance evaluation of local descriptors}
 This value balances:
 
@@ -238,12 +238,12 @@ The intersection algorithm is implemented in the \texttt{keypoint\_manager} CLI 
     --tolerance 3.0
 \end{verbatim}
 
-The resulting keypoint sets are stored in the database with full provenance tracking.
+The resulting keypoint sets are stored in the database with provenance tracking.
 
 \section{Scale-Matching Strategy}
 \label{sec:scale_matching}
 
-We observed that SIFT and KeyNet detectors produce keypoints with dramatically different scale distributions. This motivated our scale-matching strategy.
+We observed that SIFT and KeyNet detectors produce keypoints with different scale distributions. This motivated our scale-matching strategy.
 
 \subsection{Scale Distribution Analysis}
 
@@ -292,7 +292,7 @@ std::sort(keypoints.begin(), keypoints.end(),
 keypoints.resize(target_count);
 \end{verbatim}
 
-\textbf{Why larger scales improve performance:} SIFT computes descriptors using $16 \times 16$ spatial bins at the keypoint's detected scale. Larger-scale keypoints capture more image context within each bin, producing more distinctive gradient histograms that are stable under geometric and photometric transformations. Small-scale keypoints ($<$6 pixels) suffer from aliasing artifacts and provide insufficient context for reliable matching.
+\textbf{Why larger scales improve performance:} SIFT computes descriptors using $16 \times 16$ spatial bins at the keypoint's detected scale. Larger-scale keypoints capture more image context within each bin, producing more distinctive gradient histograms that are stable under geometric and photometric transformations. Small-scale keypoints ($<$6 pixels) suffer from aliasing and provide insufficient context for reliable matching.
 
 \textbf{Experimental validation:} Scale filtering provides a +21\% absolute improvement for SIFT (42.64\% $\rightarrow$ 63.86\% mAP), representing a 50\% relative gain. This single optimization has greater impact than any fusion strategy tested.
 % ============================================================================
@@ -349,7 +349,7 @@ where $\alpha \in [0, 1]$ controls the contribution of each descriptor. We use $
 
 \section{Experimental Pipeline}
 
-Our experimental workflow integrates the components described above into a cohesive pipeline:
+Our experimental workflow integrates the components described above into a single pipeline:
 
 \begin{enumerate}
     \item \textbf{Detection}: Generate keypoints for all HPatches images using detectors (SIFT, KeyNet) via Python/Kornia scripts.
@@ -361,7 +361,7 @@ Our experimental workflow integrates the components described above into a cohes
 
 \section{Evaluation Methodology}
 
-We employ a multi-faceted evaluation strategy based on the protocols defined by Balntas et al.~\cite{balntas2017hpatches} and expanded by Bojani\'{c} et al.~\cite{bojanic2020comparison}.
+We use an evaluation strategy based on the protocols defined by Balntas et al.~\cite{balntas2017hpatches} and expanded by Bojani\'{c} et al.~\cite{bojanic2020comparison}.
 
 \subsection{Task 1: Image Matching (mAP)}
 
@@ -382,7 +382,7 @@ We report \textbf{True Micro mAP}: An Information Retrieval (IR) style metric wh
 % ============================================================================
 \subsubsection{True mAP vs. Legacy Precision}
 
-It is important to distinguish our ``True mAP'' metric from simpler precision-based measures sometimes reported in the literature:
+We distinguish our ``True mAP'' metric from simpler precision-based measures sometimes reported in the literature:
 
 \textbf{Legacy Precision (not used):}
 \begin{itemize}
