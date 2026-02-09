@@ -1,5 +1,6 @@
 % Chapter 4: Experiments and Results
-\chapter{Experiments and Results}
+
+\chapter{Experiments and Results}%
 \label{chap:results}
 % TODO: Remove DRAFTING comments before final submission
 \todo[inline]{Add figures: descriptor\_distributions.png, fusion\_contribution\_analysis.png from analysis/output/}
@@ -36,9 +37,9 @@ As defined in Chapter~\ref{chap:methodology}, we primarily report \textbf{Mean A
 
 We first establish baseline performance for traditional and learned descriptors using their native keypoint detectors without any scale filtering.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
-\caption{Baseline descriptor performance on full keypoint sets (SIFT ~2.5M, KeyNet ~2.8M)}
+\caption{Baseline descriptor performance on full keypoint sets (SIFT ~2.5M, KeyNet ~2.8M)}%
 \label{tab:baselines}
 \begin{tabular}{llrrr}
 \toprule
@@ -52,16 +53,16 @@ SOSNet & keynet\_8000 & 64.3\% & 63.4\% & 65.2\% \\
 \end{tabular}
 \end{table}
 
-The learned descriptors (HardNet, SOSNet) outperform SIFT by roughly 20 percentage points of mAP. SIFT shows a slight preference for viewpoint changes, while the CNN descriptors perform slightly better on illumination sequences.
+The learned descriptors (HardNet, SOSNet) outperform SIFT by roughly 20 percentage points of mAP\@. SIFT shows a slight preference for viewpoint changes, while the CNN descriptors perform slightly better on illumination sequences.
 
 % ===================================================================
-\section{Impact of Scale Control}
+\section{Impact of Scale Control}%
 \label{sec:scale_control}
 % ===================================================================
 
 A core hypothesis is that keypoint scale is a dominant factor in matching performance. By filtering the keypoint sets to retain only the largest 25\% of features (Scale-Controlled sets), we observe large performance improvements across all descriptor types.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Impact of Scale Control (filtering small keypoints)}
 \label{tab:scale_control}
@@ -80,18 +81,18 @@ A core hypothesis is that keypoint scale is a dominant factor in matching perfor
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:scale_control} shows that removing small, unstable keypoints improves SIFT by over 18 percentage points, bringing it close to the baseline performance of HardNet. For HardNet, scale control yields a 13.6\% gain, pushing it to 78.1\% mAP. This indicates that descriptor distinctiveness is strongly correlated with patch size.
+Table~\ref{tab:scale_control} shows that removing small, unstable keypoints improves SIFT by over 18 percentage points, bringing it close to the baseline performance of HardNet. For HardNet, scale control yields a 13.6\% gain, pushing it to 78.1\% mAP\@. This indicates that descriptor distinctiveness is strongly correlated with patch size.
 
 % ===================================================================
-\section{Impact of Spatial Intersection}
+\section{Impact of Spatial Intersection}%
 \label{sec:intersection_results}
 % ===================================================================
 
 Our fusion methodology relies on finding the spatial intersection of keypoints detected by SIFT and KeyNet. We analyzed whether this intersection step itself acts as a quality filter.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
-\caption{Performance of HardNet on different keypoint subsets}
+\caption{Performance of HardNet on different keypoint subsets}%
 \label{tab:intersection_analysis}
 \begin{tabular}{lrrr}
 \toprule
@@ -127,7 +128,7 @@ For controlled evaluation of cross-family fusion, including the effects of magni
 
 We also evaluated fusion within the SIFT family to determine if combining grayscale and color descriptors provides benefit.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{SIFT-family fusion results on scale-controlled keypoints}
 \label{tab:sift_family_fusion}
@@ -151,7 +152,7 @@ DSPSIFT + DSPRGBSIFT & Average (128D) & 65.37\% \\
 
 We tested cross-detector fusion using SIFT and SURF descriptors on their spatial intersection:
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{SIFT-SURF fusion on intersection keypoints}
 \label{tab:sift_surf_fusion}
@@ -191,7 +192,7 @@ The lack of fusion benefit can be attributed to three factors:
 
 Fusing two learned descriptors proved highly effective. Table~\ref{tab:fusion_results} shows the results for fusing HardNet and SOSNet on the scale-matched intersection set.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{CNN+CNN Fusion Results (Scale-Matched Intersection)}
 \label{tab:fusion_results}
@@ -222,22 +223,21 @@ Analyzing the breakdown of full-image results provides insight into where these 
 \begin{enumerate}
     \item \textbf{Traditional Methods}: SIFT benefits immensely from scale control on viewpoint sequences (+19.8\% HP-V vs +16.7\% HP-I), confirming that scale variance is a primary source of error for hand-crafted detectors in geometric tasks.
     \item \textbf{Learned Methods}: HardNet and SOSNet are naturally robust to illumination changes (HP-I $>$ HP-V).
-    \item \textbf{Fusion Synergy}: The fused CNN descriptor achieves excellent performance on both tasks (92.6\% HP-V, 94.2\% HP-I), effectively closing the gap between geometric and photometric invariance.
+    \item \textbf{Fusion}: The fused CNN descriptor achieves excellent performance on both tasks (92.6\% HP-V, 94.2\% HP-I), effectively closing the gap between geometric and photometric invariance.
 \end{enumerate}
 
 % ===================================================================
-\section{Color Patch Benchmark Results}
+\section{Color Patch Benchmark Results}%
 \label{sec:patch_results}
 % ===================================================================
-\todo[inline]{Decision needed: Run verification/retrieval metrics for CNN experiments? Currently only SIFT baseline has these.}
 
 The patch benchmark isolates descriptor effects by using pre-extracted 65$\times$65 color patches. All descriptors are computed on identical patch locations, removing keypoint quality as a confounding variable.
 
 \subsection{Baseline Descriptor Performance on Patches}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
-\caption{Single descriptor performance on color patch benchmark}
+\caption{Single descriptor performance on color patch benchmark}%
 \label{tab:patch_baselines}
 \begin{tabular}{lrrrr}
 \toprule
@@ -257,7 +257,7 @@ CNN descriptors (HardNet, SOSNet) achieve the best single-descriptor matching pe
 
 We characterize descriptors by their \textbf{verification-to-matching (V/M) ratio}:
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Descriptor ``personality'' based on V/M ratio}
 \label{tab:vm_ratio}
@@ -281,7 +281,7 @@ This framework predicts that pairing a discriminator with a matcher yields the b
 
 \subsection{Descriptor Fusion on Patches}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Descriptor fusion results on color patch benchmark}
 \label{tab:patch_fusion}

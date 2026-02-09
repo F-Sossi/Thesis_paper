@@ -15,7 +15,7 @@ The SIFT (Scale-Invariant Feature Transform) detector~\cite{lowe2004distinctive}
     \item \textbf{Sub-pixel localization}: Taylor expansion refines keypoint position
 \end{itemize}
 
-Other traditional detectors include Harris corners, FAST, and SURF~\cite{lee2016survey,bay2006surf}, each with different trade-offs between repeatability and computational cost.
+Other traditional detectors include Harris corners~\cite{harris1988combined}, FAST~\cite{rosten2006machine}, and SURF~\cite{bay2006surf}, each with different trade-offs between repeatability and computational cost~\cite{lee2016survey}.
 
 \subsection{Learned Detectors}
 
@@ -167,8 +167,8 @@ This approach does not require keypoint alignment but cannot create a unified de
 
 Prior work has explored:
 \begin{itemize}
-    \item Detector-descriptor pairing studies showing mismatch penalties
-    \item Late fusion of matching scores (Dempster-Shafer theory)
+    \item Detector-descriptor pairing studies showing mismatch penalties~\cite{mikolajczyk2005comparison,ma2021local}
+    \item Late fusion of matching scores
     \item Ensemble methods in image matching challenges
 \end{itemize}
 

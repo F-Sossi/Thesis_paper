@@ -12,7 +12,7 @@ This thesis investigated detector consensus and descriptor fusion for local feat
 
     \item \textbf{Magnitude Matching for Cross-Family Fusion}: Cross-family fusion (SIFT+CNN) requires pre-fusion L2 normalization to ensure equal contribution from each descriptor. With proper normalization, SIFT+HardNet achieves 46.0\% mAP on patches.
 
-    \item \textbf{Complementary Descriptor Fusion}: Pairing a ``discriminator'' (HoNC, high verification-to-matching ratio) with a ``matcher'' (CNN) yields substantial improvements. HoNC+SOSNet concatenation achieves 50.6\% mAP on the color patch benchmark, outperforming all individual descriptors.
+    \item \textbf{Complementary Descriptor Fusion}: Pairing descriptors with different strengths HoNC (high verification) with CNN (high matching)---yields improvements. HoNC + SOSNet achieves 50.6\% mAP on color patches, outperforming all individual descriptors.
 
     \item \textbf{Scale Control Methodology}: Filtering keypoints by scale yields large improvements: +39\% relative for SIFT-family descriptors and +21\% relative for CNN descriptors.
 
@@ -65,9 +65,9 @@ Weights could be learned per-dimension or globally, potentially improving cross-
 
 Validate findings on:
 \begin{itemize}
-    \item Oxford5k and Paris6k (image retrieval)
-    \item MegaDepth (wide-baseline matching)
-    \item ETH3D (multi-view stereo)
+    \item Oxford5k~\cite{oxford-dataset} and Paris6k~\cite{philbin2008lost} (image retrieval)
+    \item MegaDepth~\cite{li2018megadepth} (wide-baseline matching)
+    \item ETH3D~\cite{schops2017eth3d} (multi-view stereo)
 \end{itemize}
 
 \subsection{End-to-End Learning}
@@ -87,7 +87,7 @@ Systematically study the relationship between intersection tolerance and matchin
 \section{Closing Remarks}
 % DRAFTING: Updated to reflect detector consensus and color fusion findings
 
-This thesis demonstrates two complementary approaches to improving local feature matching. First, using multiple detectors as a consensus filter identifies high-quality keypoints that are more distinctive and repeatable than those found by any single detector. Second, fusing complementary descriptors---particularly color descriptors like HoNC with learned descriptors like SOSNet---captures information that neither descriptor provides alone.
+This thesis demonstrates two complementary approaches to improving local feature matching. First, using multiple detectors as a consensus filter identifies high quality keypoints that are more distinctive and repeatable than those found by any single detector. Second, fusing complementary descriptors particularly color descriptors like HoNC with learned descriptors like SOSNet captures information that neither descriptor provides alone.
 
 A key technical finding is that cross-family fusion (SIFT+CNN) requires proper magnitude matching through pre-fusion L2 normalization. The initial fusion failures were not due to fundamental incompatibility between descriptor families, but rather a fixable magnitude mismatch problem.
 

@@ -18,7 +18,7 @@ Larger-scale keypoints capture patches containing more pixels:
 
 \subsection{Aliasing and Noise}
 
-Small-scale keypoints are more susceptible to:
+Small-scale keypoints are more susceptible to~\cite{lowe2004distinctive}:
 \begin{itemize}
     \item \textbf{Aliasing}: High-frequency content that violates Nyquist sampling
     \item \textbf{Noise sensitivity}: Small patches have lower signal-to-noise ratio
@@ -89,8 +89,8 @@ This ensures equal contribution from each descriptor without additional processi
 
 Despite similar training methodologies, HardNet and SOSNet learn slightly different representations:
 \begin{itemize}
-    \item \textbf{HardNet}: Trained with hard negative mining, focuses on discriminative features
-    \item \textbf{SOSNet}: Incorporates second-order similarity, captures different geometric relationships
+    \item \textbf{HardNet}~\cite{mishchuk2017working}: Trained with hard negative mining, focuses on discriminative features
+    \item \textbf{SOSNet}~\cite{tian2019sosnet}: Incorporates second-order similarity, captures different geometric relationships
 \end{itemize}
 
 Concatenation preserves both representations, allowing the matcher to utilize all available information.
@@ -163,7 +163,7 @@ Rather, the improvement occurs because:
     \item Higher repeatability leads to more correct correspondences being available for matching
 \end{enumerate}
 
-This finding has practical implications: \textbf{keypoint selection strategy can matter as much as descriptor algorithm choice}. The 17\% gain from intersection filtering is comparable to the gap between SIFT and CNN descriptors.
+This finding has practical implications: keypoint selection strategy can matter as much as descriptor algorithm choice. The 17\% gain from intersection filtering is comparable to the gap between SIFT and CNN descriptors.
 
 \section{HP-V vs HP-I Patterns}
 
@@ -177,7 +177,7 @@ Our results show opposite patterns:
 
 \subsection{Explanation}
 
-CNN descriptors are trained on patches with photometric augmentations (brightness, contrast, gamma), leading to learned illumination invariance~\cite{mishchuk2017working,tian2019sosnet}. Traditional descriptors rely on gradient directions, which are naturally invariant to multiplicative illumination changes but not to more complex photometric transformations.
+CNN descriptors are trained on patches with photometric augmentations (brightness, contrast, gamma), leading to learned illumination invariance~\cite{mishchuk2017working,tian2019sosnet}. Traditional descriptors rely on gradient directions, which are naturally invariant to multiplicative illumination changes but not to more complex photometric transformations~\cite{lowe2004distinctive}.
 
 \section{Limitations}
 
@@ -206,7 +206,7 @@ For real-time applications, this overhead may be prohibitive.
 
 Our best results use KeyNet for CNN descriptors. The findings may not transfer to other detector choices (e.g., SuperPoint's built-in detector).
 
-\section{Summary of Insights}
+\section{Summary of Findings}
 % DRAFTING: Updated to reflect keypoint quality findings from intersection investigation
 
 \begin{enumerate}
@@ -214,11 +214,11 @@ Our best results use KeyNet for CNN descriptors. The findings may not transfer t
 
     \item \textbf{Keypoint selection matters as much as descriptor algorithm}: The 17\% gain from detector intersection is comparable to the gap between traditional and CNN descriptors
 
-    \item \textbf{Detector agreement signals keypoint quality, not descriptor distinctiveness}: Intersection keypoints are more \textit{repeatable}---the descriptors themselves are not more distinctive, but the underlying image structures are more reliably detected across images
+    \item \textbf{Detector agreement signals keypoint quality, not descriptor distinctiveness}: Intersection keypoints are more repeatable the descriptors themselves are not more distinctive, but the underlying image structures are more reliably detected across images
 
     \item \textbf{Complementary descriptors outperform similar ones}: HoNC+CNN fusion (50.6\% on patches) beats CNN+CNN (49.9\%) because color and learned features capture different information
 
     \item \textbf{Magnitude matching enables cross-family fusion}: Pre-fusion L2 normalization is required for SIFT+CNN fusion
 
-    \item \textbf{Concatenation $>$ averaging}: Preserving full information outperforms lossy aggregation across all successful fusions
+    \item \textbf{Concatenation outperforms averaging}: Preserving full information outperforms lossy aggregation across all successful fusions
 \end{enumerate}

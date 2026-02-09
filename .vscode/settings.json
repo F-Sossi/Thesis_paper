@@ -1,11 +1,20 @@
 {
     "cSpell.words": [
         "convolutional",
+        "CUDA",
+        "Distractor",
         "Hellinger",
         "homographies",
         "interpretability",
+        "keynet",
         "keypoint",
         "keypoints",
+        "Kornia",
+        "Mikolajczyk",
+        "Nyquist",
+        "ONNX",
+        "RGBSIFT",
+        "Schmid's",
         "Soatto"
     ]
 }
