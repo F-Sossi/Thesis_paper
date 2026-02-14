@@ -36,21 +36,21 @@ While KeyNet focuses on detection to be paired with separate descriptors, other 
 \begin{itemize}
     \item \textbf{SuperPoint}~\cite{detone2018superpoint}: A fully convolutional network trained using self-supervision. It employs a single shared encoder and two separate decoder heads for interest point detection and descriptor generation.
     \item \textbf{LF-Net}~\cite{ono2018lf}: Learns local features without human supervision by optimizing a keypoint correspondence objective, enforcing geometry constraints across multi-view images.
-    \item \textbf{ALIKE}~\cite{zhao2023aliked}: A lightweight framework that combines the strengths of handcrafted and learned methods, using a deformable transformation module to improve geometric invariance while maintaining high computational efficiency.
+    \item \textbf{ALIKE}~\cite{zhao2023aliked}: A lightweight framework that blends handcrafted and learned methods, using a deformable transformation module to improve geometric invariance while maintaining high computational efficiency.
 \end{itemize}
 
 These end-to-end methods provide an alternative to the detect-then-describe pipeline, but they often require strictly coupled detector-descriptor pairs, unlike the mix-and-match flexibility we investigate with KeyNet and SIFT.
 
 \subsection{Detector Characteristics}
 
-A critical observation for this thesis is that different detectors produce keypoints with different scale distributions:
+An observation central to this thesis is that different detectors produce keypoints with different scale distributions:
 
 \begin{itemize}
     \item \textbf{SIFT detector}: Produces predominantly small-scale keypoints (average 4.45 pixels in our experiments)
     \item \textbf{KeyNet detector}: Produces larger-scale keypoints (average 49.83 pixels), approximately 10$\times$ larger
 \end{itemize}
 
-This scale difference has significant implications for descriptor quality, as larger patches contain more distinctive information.
+This scale difference directly affects descriptor quality, since larger patches contain more distinctive information.
 
 \section{Local Feature Descriptors}
 
@@ -114,7 +114,7 @@ SOSNet achieves similar performance to HardNet with slightly better generalizati
 \subsection{Descriptor Magnitude and Normalization}
 % DRAFTING: Updated to reflect magnitude mismatch finding, not distribution incompatibility
 
-A critical consideration for descriptor fusion is \textit{magnitude matching}. Different descriptor families produce values at vastly different scales before normalization:
+A key factor in descriptor fusion is \textit{magnitude matching}. Different descriptor families produce values at different scales before normalization:
 
 \begin{table}[h]
 \centering
@@ -196,7 +196,7 @@ We employ two distinct evaluation protocols, each with three tasks. The protocol
 
 The original HPatches benchmark~\cite{balntas2017hpatches} evaluates descriptors on \textit{pre-extracted patches}, removing keypoint detection as a variable:
 
-\textbf{Patch Matching}: For each reference patch, rank all target patches from the same sequence by descriptor distance. Report mAP based on whether the correct correspondence ranks first.
+\textbf{Patch Matching}: For each reference patch, rank all target patches from the same sequence by descriptor distance. Report Mean Average Precision (mAP), defined as the mean of per-query Average Precision (AP) scores. For a single query with one relevant item, $\text{AP} = 1/r$ where $r$ is the rank of the correct match; mAP averages this over all queries, so a perfect system (every correct match ranked first) achieves $\text{mAP} = 1.0$.
 
 \textbf{Patch Verification}: Binary classification of patch pairs as ``same location'' (positive) or ``different location'' (negative). Negatives include both same-sequence and different-sequence patches. Report AP.
 

@@ -1,7 +1,7 @@
 % Chapter 5: Discussion
 % TODO: Remove DRAFTING comments before final submission
 
-This chapter interprets our experimental findings, explaining the underlying causes of observed performance patterns and providing practical recommendations.
+This chapter explains why the observed performance patterns occur and offers practical recommendations.
 
 \section{Why Scale Control Matters}
 
@@ -27,14 +27,14 @@ Small-scale keypoints are more susceptible to~\cite{lowe2004distinctive}:
 
 \subsection{Practical Recommendation}
 
-For systems requiring high matching accuracy, we recommend filtering to the top 25\% of keypoints by scale. The trade-off is reduced keypoint count (645K vs 2.5M in our experiments), but the quality improvement outweighs the coverage reduction.
+For systems requiring high matching accuracy, we recommend filtering to the top 25\% of keypoints by scale. The trade-off is reduced keypoint count (645K vs 2.5M in our experiments), but the quality gain is worth the coverage loss.
 
 \section{Understanding Fusion: Magnitude Matching}
 % DRAFTING: Simplified to focus on technical requirement, not bug discovery
 
 \subsection{Pre-Fusion Normalization Requirement}
 
-Cross-family descriptor fusion (e.g., SIFT+CNN) requires careful attention to descriptor magnitudes. Different descriptor families produce values at different scales:
+Cross-family descriptor fusion (e.g., SIFT+CNN) requires matching descriptor magnitudes. Different descriptor families produce values at different scales:
 
 \begin{table}[h]
 \centering
@@ -93,7 +93,7 @@ Despite similar training methodologies, HardNet and SOSNet learn slightly differ
     \item \textbf{SOSNet}~\cite{tian2019sosnet}: Incorporates second-order similarity, captures different geometric relationships
 \end{itemize}
 
-Concatenation preserves both representations, allowing the matcher to utilize all available information.
+Concatenation preserves both representations, allowing the matcher to use all available information.
 
 \subsection{Why Concatenation Outperforms Averaging}
 
@@ -191,7 +191,6 @@ Our experiments use only the HPatches benchmark. While HPatches is a standard ev
 \end{itemize}
 
 \subsection{Computational Considerations}
-\todo[inline]{Add actual timing numbers from experiments.db to quantify the overhead}
 
 Concatenation doubles descriptor dimensionality (128D to 256D), increasing:
 \begin{itemize}
@@ -200,7 +199,9 @@ Concatenation doubles descriptor dimensionality (128D to 256D), increasing:
     \item Index size for approximate nearest neighbor methods
 \end{itemize}
 
-For real-time applications, this overhead may be prohibitive.
+However, the dominant factor in total pipeline cost is \textit{keypoint count}, not descriptor dimensionality. On the full HPatches benchmark, HardNet on the full KeyNet set ($\sim$2.8M keypoints) requires 219 seconds, of which 134 seconds is matching. The HardNet+SOSNet concatenation on the scale-matched intersection ($\sim$111K keypoints) completes in 7.7 seconds total---a $28\times$ speedup---because the intersection reduces keypoint count by 96\%, which reduces matching time quadratically (brute-force). The concatenated 256D descriptor adds only 0.1 seconds of matching overhead compared to the 128D averaged variant (0.5s vs.\ 0.3s).
+
+For real-time applications, the overhead of concatenation is minor compared to keypoint filtering gains. The bottleneck is descriptor extraction, not matching.
 
 \subsection{Detector Dependency}
 

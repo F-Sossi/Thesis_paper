@@ -49,6 +49,7 @@
 
 \usepackage{booktabs}     % Professional tables
 \usepackage{graphicx}     % For figures
+\graphicspath{{figures/}} % Path to thesis figures directory
 \usepackage{amsmath}      % Math equations
 \usepackage{hyperref}     % Hyperlinks in PDF
 \usepackage[colorinlistoftodos,prependcaption]{todonotes}  % Drafting notes
@@ -124,13 +125,18 @@ Scale Control and Spatial Alignment for Local Feature Matching}
 % TODO: Verify all numbers match Results chapter
 Local feature descriptors are fundamental to many computer vision applications including SLAM, structure from motion, and image retrieval. This thesis evaluates two approaches to improving local feature matching: using multiple detectors as a quality filter for keypoint selection, and fusing complementary descriptors to combine their strengths.
 
-We show that spatial intersection between differnt keypoint detectors acts as a quality filter. When different detection methods whether SIFT and SURF or SIFT and KeyNet both identify a keypoint at the same location, this consensus indicates a distinctive feature. Descriptors computed at intersection keypoints consistently outperform those on single detector sets, with HardNet achieving 82.4\% mAP on SIFT-KeyNet intersection a 25\% relative improvement and the best single descriptor result in our study.
 
-In order to evalutae color descritptor we reimplemented a color version of the HPatches patch benchmark, allowing us to evaluate color aware descriptors. Using this dataset, we show that fusing the color histogram descriptor HoNC with learned CNN descriptors yields substantial improvements: HoNC+SOSNet concatenation achieves 50.6\% mAP on patch matching, outperforming all individual descriptors. HoNC's strong discriminative capability (high verification to matching ratio) complements the CNN's matching optimized representations.
+We show that spatial intersection between different keypoint detectors acts as a quality filter. When different detection methods, whether SIFT and SURF or SIFT and KeyNet, both identify a keypoint at the same location, this consensus indicates a distinctive feature. Descriptors computed at intersection keypoints consistently outperform those on single detector sets, with HardNet achieving 82.4\% mAP on SIFT-KeyNet intersection, a 25\% relative improvement and the best single descriptor result in our study.
+
+
+In order to evaluate color descriptors we reimplemented a color version of the HPatches patch benchmark, allowing us to evaluate color aware descriptors. Using this dataset, we show that fusing the color histogram descriptor HoNC with learned CNN descriptors yields substantial improvements: HoNC+SOSNet concatenation achieves 50.6\% mAP on patch matching, outperforming all individual descriptors. HoNC's strong discriminative capability (high verification to matching ratio) complements the CNN's matching optimized representations.
+
 
 Cross family fusion (SIFT+CNN) requires pre-fusion L2 normalization to ensure equal contribution from each descriptor; with proper normalization, SIFT+HardNet achieves 46.0\% mAP on patches. Keypoint scale is also a dominant factor: filtering to large scale keypoints yields 39\% relative improvement for SIFT and 21\% for CNN descriptors.
 
+
 We develop DescriptorWorkbench, an open source evaluation framework, and conduct over 100 experiments. The results show that keypoint quality determined by detector consensus and scale has greater impact on matching performance than descriptor algorithm choice alone.
+
 }
  
 %
@@ -141,7 +147,7 @@ We develop DescriptorWorkbench, an open source evaluation framework, and conduct
 \listoftables
 
 % TODO: Remove \listoftodos before final submission
-\listoftodos
+\listoftodos%
  
 %
 % ----- acknowledgments

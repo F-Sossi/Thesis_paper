@@ -1,4 +1,0 @@
-\contentsline {todo}{\fcolorbox {black}{orange}{\textcolor {orange}{o}}\ Add computational cost/timing table from experiments.db (processing\_time\_ms column)}{29}{section*.22}%
-\contentsline {todo}{\fcolorbox {black}{orange}{\textcolor {orange}{o}}\ Add figures: descriptor\_distributions.png, fusion\_contribution\_analysis.png from analysis/output/}{30}{section*.23}%
-\contentsline {todo}{\fcolorbox {black}{orange}{\textcolor {orange}{o}}\ Verify 93.4\% matches database query and is consistent with abstract/conclusion}{35}{section*.26}%
-\contentsline {todo}{\fcolorbox {black}{orange}{\textcolor {orange}{o}}\ Add actual timing numbers from experiments.db to quantify the overhead}{46}{section*.27}%

@@ -1,10 +1,12 @@
 {
     "cSpell.words": [
+        "booktitle",
         "convolutional",
         "CUDA",
         "Distractor",
         "Hellinger",
         "homographies",
+        "homography",
         "interpretability",
         "keynet",
         "keypoint",

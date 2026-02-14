@@ -21,7 +21,7 @@ This thesis investigated detector consensus and descriptor fusion for local feat
 
 \section{Key Findings}
 
-Our experiments reveal several insights for local feature matching:
+Our experiments lead to several practical observations:
 
 \begin{itemize}
     \item \textbf{Quality over quantity}: Fewer, better keypoints (scale-filtered or intersection-filtered) outperform larger sets of lower-quality keypoints.
@@ -91,6 +91,6 @@ This thesis demonstrates two complementary approaches to improving local feature
 
 A key technical finding is that cross-family fusion (SIFT+CNN) requires proper magnitude matching through pre-fusion L2 normalization. The initial fusion failures were not due to fundamental incompatibility between descriptor families, but rather a fixable magnitude mismatch problem.
 
-More broadly, our findings suggest that keypoint quality deserves more attention. The 39\% improvement from scale control and 25\% improvement from detector consensus exceed many algorithmic advances, yet these filtering strategies are rarely discussed in the literature. We hope this work encourages more research into keypoint selection strategies alongside descriptor algorithm development.
+Our findings also suggest that keypoint quality deserves more attention. The 39\% improvement from scale control and 25\% improvement from detector consensus exceed many algorithmic advances, yet these filtering strategies are rarely discussed in the literature. We hope this work encourages more research into keypoint selection strategies alongside descriptor algorithm development.
 
 The DescriptorWorkbench framework, color HPatches benchmark, and all experimental configurations are available as open-source software, enabling reproduction and extension of these results.

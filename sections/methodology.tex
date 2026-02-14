@@ -133,7 +133,7 @@ SIFT Retrieval AP & 31.98\% & 31.1\% & --0.9\% \\
 \end{tabular}
 \end{table}
 
-The rebuilt benchmark produces slightly lower matching scores (22.9\% vs 25.47\%), indicating marginally harder patches, while verification and retrieval metrics are nearly identical. This supports that the reconstruction captures the essential characteristics of the original benchmark while enabling color descriptor evaluation.
+The rebuilt benchmark produces slightly lower matching scores (22.9\% vs 25.47\%), indicating marginally harder patches, while verification and retrieval metrics are nearly identical. The reconstruction closely matches the original benchmark while adding color support.
 
 \subsection{Deep Learning Integration}
 
@@ -141,7 +141,7 @@ Integrating deep learning models (typically implemented in Python/PyTorch) into 
 
 \subsubsection{Hybrid Architecture}
 
-We use a hybrid pipeline that leverages the best tools for each stage:
+We use a hybrid pipeline that uses the best tool for each stage:
 
 \begin{itemize}
     \item \textbf{Keypoint Detection (Python/Kornia)}: KeyNet detection is performed offline using Python scripts that interface with the Kornia library~\cite{riba2020survey}. This ensures 100\% fidelity to the reference implementation and avoids re-implementation errors. Coordinates are serialized to the SQLite database for reuse.
@@ -180,6 +180,10 @@ Given two keypoint sets $K_A$ (e.g., SIFT-detected) and $K_B$ (e.g., KeyNet-dete
         \item Check uniqueness: $k_b$ not already matched
         \item If all checks pass, add $(k_a, k_b)$ to intersection
     \end{enumerate}
+
+    \textbf{Note on the reverse tolerance check:} When mutual agreement holds ($k_a' = k_a$), the reverse tolerance check (e) is algebraically identical to the forward check (b), since $\|k_b - k_a'\|_2 = \|k_b - k_a\|_2$. The reverse check only provides additional filtering when mutual agreement fails ($k_a' \neq k_a$), in which case the pair is already rejected by check (d). In practice, check (e) is therefore redundant given check (d), but we retain it for defensive correctness.
+
+    \textbf{Note on KD-tree usage:} For 2D spatial matching, a KD-tree is not strictly necessary---a brute-force search over $(x, y)$ coordinates would suffice for our dataset sizes. We use a KD-tree because OpenCV's \texttt{cv::flann} provides an efficient, well-tested implementation, and the data structure generalizes naturally if future work extends the matching criteria to higher-dimensional spaces (e.g., incorporating scale or orientation).
 
     \item Output: Paired keypoint sets $(K_A^*, K_B^*)$ with 1-to-1 correspondence
 \end{enumerate}
@@ -238,13 +242,14 @@ For example, if SIFT detects a corner at $(100.0, 200.0)$ and KeyNet detects a b
 
 \textbf{Tolerance vs. scale:} The current implementation uses a fixed pixel tolerance regardless of keypoint scale. A scale-proportional tolerance (e.g., $\tau = 0.3 \times \text{avg\_scale}$) could be explored in future work, though the fixed tolerance has proven effective and computationally efficient.
 
-\textbf{Experimental validation:} We tested tolerances from 1.0 to 6.0 pixels:
+\textbf{Experimental validation:} We tested tolerance values from 1.0 to 10.0 pixels using DSP-SIFT on SIFT--KeyNet intersection sets:
 \begin{itemize}
-    \item $\tau = 1.0$ (strict): 67.41\% mAP---fewer but higher-quality matches
-    \item $\tau = 3.0$ (default): $\sim$65\% mAP---balanced
-    \item $\tau = 6.0$ (loose): 74.93\% mAP---more matches, better for scale-matched sets
+    \item $\tau = 1.0$ (strict): 67.41\% mAP---fewest keypoints, highest alignment quality
+    \item $\tau = 2.0$: 62.10\% mAP---moderate keypoint count
+    \item $\tau = 5.0$ (relaxed): 57.31\% mAP---more keypoints, lower alignment quality
+    \item $\tau = 10.0$ (very relaxed): 57.06\% mAP---diminishing returns beyond 5 pixels
 \end{itemize}
-The 6-pixel tolerance is used for scale-matched intersection sets because larger-scale keypoints have inherently more localization variance.
+Stricter tolerances yield higher mAP because they enforce tighter spatial alignment, producing more precisely corresponding patches at the cost of reduced keypoint count. We use $\tau = 3.0$ pixels as the default, following Mikolajczyk and Schmid~\cite{mikolajczyk2003evaluation}, which balances alignment quality against coverage. For scale-matched intersection sets (Section~\ref{sec:scale_matching}), we use a 6-pixel tolerance because larger-scale keypoints have inherently more localization variance.
 % ============================================================================
 % END DRAFTING
 % ============================================================================
@@ -399,7 +404,7 @@ The primary metric for descriptor utility is Mean Average Precision (mAP) in an 
     \item Compute Average Precision (AP) as the area under the Precision-Recall curve.
 \end{enumerate}
 
-We report \textbf{True Micro mAP}: An Information Retrieval (IR) style metric where we aggregate AP over all queries. Crucially, we enforce a \textbf{Single Ground Truth (R=1)} policy: for a given keypoint in $I_A$, there is at most one correct match in $I_B$ (the nearest neighbor in the intersection set).
+We report \textbf{True Macro mAP}: An Information Retrieval (IR) style metric where we compute AP per scene and average across scenes, ensuring that texture-poor scenes (with fewer keypoints) contribute equally. Crucially, we enforce a \textbf{Single Ground Truth (R=1)} policy: for a given keypoint in $I_A$, there is at most one correct match in $I_B$ (the nearest neighbor in the intersection set).
 
 % ============================================================================
 % DRAFTING: Detailed explanation of True mAP vs legacy precision
@@ -435,7 +440,7 @@ int rank = 1 + count_better_scoring_matches;
 double ap = 1.0 / rank;
 \end{verbatim}
 
-This IR-style evaluation is the standard used in HPatches benchmarks and ensures comparability with published results.
+This IR-style evaluation matches the standard used in HPatches benchmarks.
 % ============================================================================
 % END DRAFTING
 % ============================================================================
@@ -449,7 +454,7 @@ Following Bojani\'{c} et al.~\cite{bojanic2020comparison}, verification tests th
     \item \textbf{Positive pairs}: Spatially corresponding keypoints from sequence pairs.
     \item \textbf{Negative pairs}: Spatially non-corresponding keypoints (distractors).
 \end{itemize}
-We compute the Area Under the ROC Curve (AUC) to measure discriminative power independent of the nearest-neighbor search strategy.
+We compute the Area Under the Receiver Operating Characteristic (ROC) Curve. The ROC curve plots the True Positive Rate (TPR) against the False Positive Rate (FPR) as the distance threshold varies from strict to permissive. A perfect descriptor achieves AUC = 1.0 (all positives ranked before all negatives), while a random baseline achieves AUC = 0.5. This threshold-independent metric measures discriminative power without committing to a specific matching strategy.
 
 \subsection{Task 3: Keypoint Retrieval}
 
@@ -461,13 +466,13 @@ This task evaluates the descriptor's ranking capability. For a query patch, the 
     \item $y=0$: "Hard negatives" (patches from the same image but different locations).
     \item $y=-1$: "Easy negatives" (patches from different sequences/scenes).
 \end{itemize}
-This metric highlights whether a descriptor has learned semantically meaningful representations that separate true matches from visually similar but geometrically distinct structures.
+This metric tests whether the descriptor can rank true matches above hard negatives---patches from different locations that may look similar.
 
 \subsection{Aggregation and Breakdown}
 
 To account for the diversity of the HPatches dataset, we report results in two aggregation modes:
 \begin{itemize}
-    \item \textbf{Micro Average}: Aggregates all queries globally. biases towards scenes with more keypoints.
+    \item \textbf{Micro Average}: Aggregates all queries globally. Biases towards scenes with more keypoints.
     \item \textbf{Macro Average}: Computes metrics per scene, then averages across scenes. This ensures that texture-poor scenes (with fewer keypoints) contribute equally to the final score.
 \end{itemize}
 
@@ -484,7 +489,7 @@ Results are further stratified by scene type:
 Our experiments vary the following factors:
 
 \begin{itemize}
-    \item \textbf{Descriptor type}: SIFT, RootSIFT, DSP-SIFT, HardNet, SOSNet
+    \item \textbf{Descriptor type}: SIFT, RootSIFT, DSP-SIFT, HardNet, SOSNet, HoNC
     \item \textbf{Keypoint set}: Full, scale-controlled, intersection, scale-matched intersection
     \item \textbf{Fusion method}: None, averaging, concatenation
     \item \textbf{Fusion pairs}: SIFT+CNN, CNN+CNN
@@ -510,4 +515,33 @@ Experiments are specified in YAML configuration files and executed via:
 
 Results are automatically stored in the SQLite database with full parameter logging for reproducibility.
 
-\todo[inline]{Add computational cost/timing table from experiments.db (processing\_time\_ms column)}
+\subsection{Computational Cost}
+
+Table~\ref{tab:timing} reports wall-clock times for the full HPatches benchmark (116 sequences, 5 image pairs each) on the hardware described in Section~\ref{chap:methodology}.
+
+\begin{table}[ht]
+\centering
+\caption{Processing time for full HPatches evaluation pipeline}
+\label{tab:timing}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Configuration} & \textbf{Keypoints} & \textbf{Desc. (s)} & \textbf{Match (s)} & \textbf{Total (s)} \\
+\midrule
+\multicolumn{5}{l}{\textit{Full keypoint sets ($\sim$2.5M keypoints):}} \\
+SIFT & $\sim$2.5M & 130 & 83 & 213 \\
+DSP-SIFT & $\sim$2.5M & 657 & 102 & 759 \\
+HardNet & $\sim$2.8M & 85 & 134 & 219 \\
+SOSNet & $\sim$2.8M & 62 & 88 & 150 \\
+\midrule
+\multicolumn{5}{l}{\textit{Scale-controlled sets ($\sim$645K keypoints):}} \\
+SIFT & $\sim$645K & 42 & 14 & 56 \\
+HardNet & $\sim$645K & 25 & 14 & 38 \\
+\midrule
+\multicolumn{5}{l}{\textit{Scale-matched intersection ($\sim$111K keypoints):}} \\
+HardNet+SOSNet (concat) & $\sim$111K & 7.2 & 0.5 & 7.7 \\
+HardNet+SOSNet (avg) & $\sim$111K & 7.4 & 0.3 & 7.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Keypoint filtering sharply reduces computation: scale-controlled sets run $4\times$ faster than full sets, and intersection sets run $28\times$ faster. Matching time scales quadratically with keypoint count (brute-force), so the intersection pipeline completes in under 8 seconds for the entire benchmark. Descriptor extraction dominates computation for DSP methods due to multi-scale processing.
