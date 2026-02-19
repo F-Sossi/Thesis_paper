@@ -348,7 +348,7 @@ SIFT + RGBSIFT & Concat & 512 & 10.4\% & --- & --- \\
 \begin{enumerate}
     \item \textbf{Complementary fusion wins}: HoNC+SOSNet (50.6\%) outperforms HardNet+SOSNet (49.9\%) despite HoNC alone being much weaker (18.5\% vs 48.4\%). The color discriminator adds value that CNN matchers lack.
 
-    \item \textbf{Weak matcher fusion fails}: SIFT+HoNC (15.5\%) and SIFT+RGBSIFT (10.4\%) perform \textit{worse} than either component alone. Note that all fusions apply pre-fusion L2 normalization (ensuring equal contribution), so magnitude mismatch is not the cause. Rather, SIFT (22.9\%) and HoNC (18.5\%) are both weak matchers that lack the learned invariance of CNN descriptors. Concatenating two weak descriptors doubles dimensionality without adding robustness the increased dimensionality makes nearest-neighbor search less reliable when neither component provides a strong matching signal. In contrast, HoNC succeeds when paired with a strong matcher like SOSNet (50.6\%): the CNN provides robust matching, and HoNC's complementary color signal enhances discrimination rather than diluting it.
+    \item \textbf{Weak matcher fusion fails}: SIFT+HoNC (15.5\%) and SIFT+RGBSIFT (10.4\%) perform \textit{worse} than either component alone. To ensure equal contribution in all fusions, we apply pre-fusion L2 normalization to deal  magnitude mismatch. In this case SIFT (22.9\%) and HoNC (18.5\%) are both weak matchers compared the learned invariance of CNN descriptors. Concatenating two weak descriptors doubles dimensionality without adding additional information. This higher dimensionality actually hurts nearest-neighbor search, because the extra dimensions introduce noise rather than matching signal. In contrast, HoNC succeeds when paired with a strong matcher like SOSNet (50.6\%): the CNN provides robust matching, and HoNC's color information improves the matching performance.
 
     \item \textbf{Concatenation outperforms averaging}: Across all successful fusions, concatenation yields 1--2\% higher mAP than averaging by preserving complementary information.
 \end{enumerate}
@@ -357,7 +357,7 @@ SIFT + RGBSIFT & Concat & 512 & 10.4\% & --- & --- \\
 
 HoNC captures color information that gradient-based descriptors (SIFT, HardNet) discard:
 \begin{itemize}
-    \item CNN descriptors are trained on grayscale patches, learning edge and texture patterns
+    \item CNN descriptors are trained on gray scale patches, learning edge and texture patterns
     \item HoNC captures chromatic distinctiveness (e.g., red vs. blue regions)
     \item The combination provides both color discrimination and geometric/photometric invariance
 \end{itemize}

@@ -158,7 +158,19 @@ We initially attempted to deploy models using the ONNX (Open Neural Network Exch
 
 We deprecated the ONNX pipeline in favor of TorchScript. Models are exported to the \texttt{.pt} format and loaded via \texttt{torch::jit::load} within our C++ \texttt{LibTorchWrapper}. This provides native PyTorch execution and numerical equivalence to the Python training code, while running inside the C++ benchmarking tool.
 
-\section{Spatial Intersection Algorithm}
+\subsection{Use of AI-Assisted Development Tools}
+
+Development of DescriptorWorkbench used Claude~\cite{anthropic2025claude}, a large language model, as a coding assistant. The tool was used for:
+
+\begin{itemize}
+    \item \textbf{Code refactoring}: Restructuring existing C++ modules (e.g., migrating from monolithic functions to the modular extractor/factory architecture)
+    \item \textbf{Code review}: Identifying bugs, suggesting improvements to error handling, and checking consistency across the YAML configuration and database schema
+    \item \textbf{Editing}: Revising draft text in this document for clarity and grammar
+\end{itemize}
+
+All experimental design, data collection, analysis, and scientific conclusions are the author's own. The AI tool was not used to generate experimental data or interpret results.
+
+\section{Spatial Intersection Algorithm}%
 \label{sec:intersection_algorithm}
 
 To enable cross-detector descriptor fusion, we need to establish correspondence between keypoints detected by different methods. We employ a mutual nearest neighbor (MNN) algorithm with spatial tolerance.
