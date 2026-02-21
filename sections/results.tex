@@ -117,7 +117,7 @@ Scale-Controlled & 78.1\% & 76.9\% & 79.3\% \\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:intersection_analysis} shows that features detected by \textit{both} detectors are higher quality than those detected by KeyNet alone, even after scale filtering. The intersection set yields an additional 4.0\% improvement in mAP, suggesting that detector consensus is a proxy for feature repeatability.
+Table~\ref{tab:intersection_analysis} shows that features detected by \textit{both} detectors are higher quality than those detected by KeyNet alone, even after scale filtering. The intersection set yields an additional 4.0\% improvement in mAP.
 
 \begin{figure}[ht]
 \centering
@@ -125,6 +125,48 @@ Table~\ref{tab:intersection_analysis} shows that features detected by \textit{bo
 \caption{HardNet performance across keypoint filtering stages. Each successive filtering step---scale control and spatial intersection---provides cumulative improvement, demonstrating that keypoint quality is a dominant factor in matching performance.}
 \label{fig:intersection_progression}
 \end{figure}
+
+\subsubsection{Validating the Intersection Mechanism}
+% SOURCE FILES for this section:
+%   Summary: analysis/output/descriptor_reports/intersection_mechanism_analysis.md
+%   NN ratios: analysis/output/descriptor_reports/investigation_1_nn_ratio_analysis.md
+%            script: analysis/scripts/analyze_nn_ratios.py
+%   Repeatability: analysis/output/descriptor_reports/investigation_2_repeatability_tracking.md
+%            script: analysis/scripts/analyze_repeatability.py
+%   Multi-descriptor: intersection_mechanism_analysis.md Finding 7
+%   Spatial distribution: analysis/scripts/analyze_keypoint_properties.py (analyze_spatial_distribution)
+%            SQL queries: intersection_mechanism_analysis.md Appendix A.4
+
+Given the substantial improvement from detector intersection (+18\% over baseline), we conducted additional analysis to understand the underlying mechanism and rule out potential artifacts.
+
+\textbf{Alternative hypotheses ruled out:}
+\begin{enumerate}
+    \item \textbf{Better repeatability}: Intersection keypoints actually have \textit{lower} repeatability (28.0\%) than scale-controlled keypoints (29.4\%). Paired t-test: $t=-4.28$, $p<0.0001$. The intersection benefit does not come from more stable detection.
+    % Source: investigation_2_repeatability_tracking.md
+
+    \item \textbf{More distinctive descriptors}: When comparing only correct matches, the nearest-neighbor distance ratios are identical across keypoint sets ($\sim$0.44). The descriptors are equally distinctive; the difference lies in which keypoints are selected.
+    % Source: investigation_1_nn_ratio_analysis.md
+
+    \item \textbf{Higher response values}: Both intersection and scale-controlled keypoints have identical average response values ($\sim$0.035). Keypoint strength does not explain the difference.
+    % Source: intersection_mechanism_analysis.md Finding 1
+
+    \item \textbf{Spatial crowding}: Intersection keypoints maintain the same spatial distribution as the baseline. Quadrant analysis shows nearly identical distributions: top-left 13\%, top-right 18\%, bottom-left 24\%, bottom-right 45\% for both intersection and scale-controlled sets. The filtering is uniform across the image.
+    % Source: analyze_keypoint_properties.py, intersection_mechanism_analysis.md Appendix A.4
+\end{enumerate}
+
+\textbf{Confirmed mechanism:}
+\begin{enumerate}
+    \item \textbf{Higher precision}: Intersection keypoints achieve 71.2\% precision at threshold 0.8, compared to 66.2\% for scale-controlled keypoints.
+    % Source: investigation_1_nn_ratio_analysis.md
+
+    \item \textbf{Fewer false positives}: Intersection produces 0.40 false positives per true positive, versus 0.51 for scale-controlled---a 22\% reduction.
+    % Source: investigation_1_nn_ratio_analysis.md
+
+    \item \textbf{Multi-descriptor consistency}: All descriptors (SIFT, RGBSIFT, HoNC, HardNet, SOSNet) benefit equally from intersection keypoints, confirming that the improvement comes from \textit{location quality}, not descriptor quality.
+    % Source: intersection_mechanism_analysis.md Finding 7
+\end{enumerate}
+
+\textbf{Interpretation}: Detector consensus (SIFT $\cap$ KeyNet) selects locations where the local image structure is inherently unique---significant enough to trigger detection criteria in both a hand-crafted (SIFT) and learned (KeyNet) detector. These locations tend to avoid repetitive textures (bricks, tiles, windows) where many keypoints look similar, resulting in fewer ambiguous matches and higher precision.
 
 % ===================================================================
 \section{Descriptor Fusion Results}
