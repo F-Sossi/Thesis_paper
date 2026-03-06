@@ -6,7 +6,7 @@
 This thesis investigated detector consensus and descriptor fusion for local feature matching, with the following contributions:
 
 \begin{enumerate}
-    \item \textbf{Detector Intersection as Quality Filter}: Keypoints detected by multiple distinct detectors are more distinctive than those found by any single detector. This effect holds for both SIFT-SURF and SIFT-KeyNet intersections, with HardNet achieving 82.4\% mAP on intersection keypoints---a 25\% relative improvement.
+    \item \textbf{Detector Intersection as Quality Filter}: Keypoints detected by multiple distinct detectors are more distinctive than those found by any single detector. This effect holds for both SIFT-SURF and SIFT-KeyNet intersections, with HardNet achieving 82.1\% mAP on intersection keypoints---a 25\% relative improvement.
 
     \item \textbf{Color HPatches Benchmark}: We created a color version of the HPatches patch benchmark by re-extracting 65$\times$65 color patches from original images. This enables evaluation of color descriptors like HoNC.
 
@@ -42,7 +42,7 @@ Based on our findings, we offer the following recommendations:
 \begin{enumerate}
     \item \textbf{For best patch matching}: Use HoNC+SOSNet concatenation (50.6\% mAP), leveraging color discrimination with learned matching.
 
-    \item \textbf{For best full-image matching}: Use HardNet on detector intersection keypoints (82.4\% mAP), or HardNet+SOSNet concatenation (93.4\% mAP) for highest accuracy.
+    \item \textbf{For best full-image matching}: Use HardNet on detector intersection keypoints (82.1\% mAP), or HardNet+SOSNet concatenation (93.4\% mAP) for highest accuracy.
 
     \item \textbf{For cross-family fusion}: Always L2 normalize each descriptor component before fusion to ensure equal contribution.
 

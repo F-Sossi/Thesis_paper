@@ -91,25 +91,65 @@ This transformation improves matching performance, particularly for illumination
 
 \subsection{Learned Descriptors}
 
+Learned descriptors use convolutional neural networks trained on patch correspondence tasks. While they share similar architectures (typically L2Net-style~\cite{tian2017l2net} backbones producing 128-dimensional outputs), they differ in training data and loss functions, leading to complementary learned representations.
+
 \subsubsection{HardNet}
 
-HardNet~\cite{mishchuk2017working} is trained using hard negative mining with triplet loss:
+HardNet~\cite{mishchuk2017working} is trained on the Brown dataset (Liberty, Notre Dame, Yosemite sequences) using hard negative mining with triplet loss:
 
 \begin{equation}
     L = \max(0, m + d(a, p) - d(a, n^-))
 \end{equation}
 
-where $(a, p)$ is a matching pair, $n^-$ is the hardest negative in the batch, and $m$ is the margin. The resulting 128-dimensional descriptor is \textit{zero-centered} with values typically in [-0.3, +0.3].
+where $(a, p)$ is a matching pair, $n^-$ is the hardest negative in the batch (selected from all non-matching pairs), and $m$ is the margin. The hard negative mining strategy forces the network to learn features that distinguish the most confusable patch pairs, producing highly discriminative descriptors. The resulting 128-dimensional descriptor is \textit{zero-centered} with values typically in [-0.3, +0.3].
 
 \subsubsection{SOSNet}
 
-SOSNet (Second Order Similarity Network)~\cite{tian2019sosnet} extends HardNet by incorporating second-order information:
+SOSNet (Second Order Similarity Network)~\cite{tian2019sosnet} is also trained on the Brown dataset but incorporates second-order similarity constraints:
 
 \begin{equation}
     L_{\text{SOS}} = L_{\text{triplet}} + \lambda L_{\text{second-order}}
 \end{equation}
 
-SOSNet achieves similar performance to HardNet with slightly better generalization.
+The second-order term encourages the network to preserve relative similarity structure: if patch $A$ is more similar to $B$ than to $C$ in the input space, this relationship should hold in the descriptor space. This regularization improves generalization to unseen data. Despite using the same training images as HardNet, the different loss function produces complementary features, explaining why HardNet+SOSNet fusion (93.4\% mAP) substantially outperforms either descriptor alone (82.1\% mAP).
+
+\subsection{Color Descriptors}
+
+Color descriptors capture chromatic information that gradient-based methods discard. While gradient descriptors like SIFT are designed to be illumination-invariant by ignoring absolute intensity, this discards potentially discriminative color information.
+
+\subsubsection{HoNC (Histogram of Normalized Colors)}
+
+HoNC~\cite{olson2016keypoint} computes a 128-dimensional histogram of normalized RGB values within a patch:
+
+\begin{enumerate}
+    \item Normalize each pixel's RGB values to unit sum: $(r, g, b) \rightarrow (r/(r+g+b), g/(r+g+b), b/(r+g+b))$
+    \item Quantize the normalized color space into bins
+    \item Accumulate weighted votes based on pixel distance from patch center
+    \item L2 normalize the final histogram
+\end{enumerate}
+
+The normalization step provides some robustness to brightness changes while preserving hue information. HoNC excels at \textit{discrimination}, rejecting false matches between patches with different colors, but struggles with \textit{invariance} to illumination changes that alter apparent color (e.g., tungsten vs.\ daylight). This complementary strength makes HoNC valuable when fused with learned descriptors that provide robust matching.
+
+\subsection{Descriptor Families Summary}
+
+We categorize descriptors into three families based on the information they capture:
+
+\begin{table}[h]
+\centering
+\caption{Descriptor families and their characteristics}
+\label{tab:descriptor_families}
+\begin{tabular}{llll}
+\toprule
+\textbf{Family} & \textbf{Examples} & \textbf{Information} & \textbf{Strengths} \\
+\midrule
+Gradient-based & SIFT, DSP-SIFT, SURF & Edge orientations & Illumination invariant \\
+Learned & HardNet, SOSNet & Trained features & High matching accuracy \\
+Color & HoNC, RGBSIFT & Chromatic content & Strong discrimination \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Fusion is most effective when combining descriptors from different families that capture complementary information. Within-family fusion (e.g., SIFT+RGBSIFT) provides minimal benefit because both descriptors encode similar gradient information. Cross-family fusion (e.g., HoNC+SOSNet) combines color discrimination with learned matching robustness, yielding the best patch-level results in our experiments.
 
 \subsection{Descriptor Magnitude and Normalization}
 % DRAFTING: Updated to reflect magnitude mismatch finding, not distribution incompatibility
@@ -172,7 +212,7 @@ Prior work has explored:
     \item Ensemble methods in image matching challenges
 \end{itemize}
 
-However, \textit{cross-detector early fusion}---averaging or concatenating descriptors from keypoints detected by different methods---remains largely unexplored. This thesis addresses this gap through our spatial intersection methodology.
+However, \textit{cross-detector early fusion}, averaging or concatenating descriptors from keypoints detected by different methods, remains largely unexplored. This thesis addresses this gap through our spatial intersection methodology.
 
 \section{Evaluation Benchmarks}
 

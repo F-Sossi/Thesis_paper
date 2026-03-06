@@ -7,9 +7,17 @@ Use `\listoftodos` in the LaTeX document to see all inline TODO notes.
 
 ---
 
+## Feedback from Committee
+
+- [ ] Clarify descriptor families we have the CNN's but they have different training data and loss functions (e.g. HardNet vs SOSNet)
+- [ ] Also clarify Families between Sift based and HoNC based methods
+- [ ] Find section where we used bullets that would convert well to paragraphs (they felt I over used bullets in some places)
+- [ ] Clarify the weightings uses in the fusion methods (all were 50/50 weightings but this was not clear in the text)
+
 ## Critical (Must Fix Before Submission)
 
 ### Decisions Needed
+
 - [ ] **Verification/Retrieval Metrics**: Run for CNN experiments or explicitly state image matching is the primary metric?
   - Option A: Run verification/retrieval for top 5-10 configurations (~5-10 hours)
   - Option B: Skip and state in thesis that image matching (mAP) is the primary evaluation metric
@@ -22,6 +30,7 @@ Use `\listoftodos` in the LaTeX document to see all inline TODO notes.
   - `intersection_descriptor_analysis.png` - Intersection effects visualization
 
 ### Content Fixes
+
 - [x] ~~Remove duplicate "Learned Fusion Weights" section in conclusion.tex~~ **FIXED**
 - [x] ~~Update year to 2026~~ **FIXED**
 - [ ] Resolve TODO note in introduction.tex about repeatability claim
@@ -29,6 +38,7 @@ Use `\listoftodos` in the LaTeX document to see all inline TODO notes.
 - [ ] Remove all `% DRAFTING:` comments before final submission
 
 ### Missing Content
+
 - [ ] Add figures from `analysis/output/` directory
   - [ ] `descriptor_distributions.png` - SIFT vs HardNet distributions
   - [ ] `fusion_contribution_analysis.png` - Why averaging fails
@@ -44,7 +54,7 @@ Ensure these numbers match across Abstract, Introduction, Results, and Discussio
 
 | Metric | Canonical Value | Check Locations |
 |--------|-----------------|-----------------|
-| HardNet on intersection | 82.1% mAP | abstract, intro, results, discussion |
+| HardNet on intersection | 82.1% mAP | abstract, intro, results, discussion | ✓ VERIFIED |
 | SIFT baseline (full set) | 44.5% mAP | results Table 1 |
 | SIFT scale-controlled | 62.8% mAP | results Table 2 |
 | HardNet scale-controlled | 78.1% mAP | results Table 2 |
@@ -58,17 +68,20 @@ Ensure these numbers match across Abstract, Introduction, Results, and Discussio
 ## Should Address (Important but not blocking)
 
 ### Methodology Additions
+
 - [ ] Add computational cost/timing table (data in experiments.db)
 - [ ] Add repeatability analysis or cite KeyNet paper numbers
 - [ ] Document tolerance parameter choice (cite Mikolajczyk & Schmid)
 
 ### Results Additions
+
 - [ ] Decision: Run verification/retrieval for CNN experiments?
   - Option A: Run for top 5 configs (~5 hours)
   - Option B: State image matching is primary metric
 - [ ] Decision: Run tolerance sensitivity study (1.0, 2.0, 5.0, 10.0 px)?
 
 ### Polish
+
 - [x] ~~Verify year~~ **FIXED: Updated to 2026**
 - [ ] Check abstract length against UW requirements (currently ~340 words)
 - [ ] Consider adding List of Abbreviations
@@ -89,6 +102,7 @@ Ensure these numbers match across Abstract, Introduction, Results, and Discussio
 ## Bibliography Status
 
 **All required citations present:**
+
 - [x] Bojanic et al. (2020) - bojanic2020comparison
 - [x] Mishchuk et al. (2017) - mishchuk2017working (HardNet)
 - [x] Tian et al. (2019) - tian2019sosnet (SOSNet)
@@ -99,6 +113,7 @@ Ensure these numbers match across Abstract, Introduction, Results, and Discussio
 - [x] Olson & Zhang (2016) - olson2016keypoint (HoNC)
 
 **Added during review:**
+
 - [x] Mikolajczyk & Schmid (2005) - mikolajczyk2005comparison - ADDED
 
 ---
