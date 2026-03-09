@@ -1,14 +1,67 @@
+# LaTeX build artifacts
 *.aux
 *.log
 *.out
 *.toc
 *.lof
 *.lot
-*.bbl
-*.blg
-*.pdf
-*.synctex.gz
 *.fls
 *.fdb_latexmk
-.vscode/settings.json
+*.synctex.gz
+*.synctex(busy)
+
+# Bibliography
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+
+# Glossaries / acronyms
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.glsdefs
+*.ist
+
+# Indices
+*.idx
+*.ilg
+*.ind
+
+# Nomenclature
+*.nlo
+*.nls
+
+# Todo notes
 *.tdo
+
+# Beamer
+*.nav
+*.snm
+*.vrb
+
+# Latexdiff
+*.ldf
+
+# Minted (code highlighting cache)
+_minted*/
+
+# Editor
+.vscode/settings.json
+.vscode/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+.claude
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp / backup files
+*.tmp
+*~
+*.bak
