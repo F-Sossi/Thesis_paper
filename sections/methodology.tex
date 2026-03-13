@@ -17,7 +17,7 @@ All experiments were conducted on a workstation with the following specification
     \item \textbf{LibTorch}: 2.10.0
 \end{itemize}
 
-We developed DescriptorWorkbench, an open-source evaluation framework for local feature descriptor research. It provides:
+We developed DescriptorWorkbench,\footnote{Source code available at \url{https://github.com/F-Sossi/DescriptorWorkbench}} an open-source evaluation framework for local feature descriptor research. It provides:
 
 \begin{itemize}
     \item \textbf{Modular architecture}: Pluggable extractors, pooling, and matchers
@@ -101,6 +101,21 @@ The patch-based pipeline extracts descriptors from pre-extracted image patches (
 \end{itemize}
 
 By using identical patch locations for all descriptors, this pipeline isolates descriptor effects from keypoint quality effects.
+
+\subsubsection{Patch Pipeline Corrections}
+\label{sec:patch_pipeline_corrections}
+
+During development, we identified and corrected several inconsistencies in the patch benchmark pipeline that affected reported results:
+
+\textbf{1. Keypoint Size Correction.} Traditional descriptors (SIFT, RootSIFT, RGBSIFT, HoNC) initially used a hardcoded keypoint size of 41.0 for 65$\times$65 patches. This was too large at size 41, SIFT's sampling window extended beyond the patch boundary, producing degraded descriptors from border padding. The correct size is derived from the HPatches reference implementation:
+\begin{equation}
+    \texttt{kp\_size} = \frac{65}{5.303} = 12.26
+\end{equation}
+where 5.303 maps OpenCV SIFT's keypoint size to a sampling region that fills the 65$\times$65 patch. SURF uses a separately derived value of 23.21, computed from OpenCV's SURF window formula ($\texttt{size} \leq 65 / 2.8$).
+
+\textbf{2. Hidden Post-Fusion Normalization.} The fusion extractor unconditionally L2-normalized all fused descriptors, an undocumented step that destroyed magnitude information from averaging and made pre-fusion normalization partially redundant. This was replaced with explicit, opt-in normalization flags (\texttt{normalize\_after\_fusion}, \texttt{root\_after\_fusion}), both off by default.
+
+\textbf{3. Matching Method.} The original matching used \texttt{cv::BFMatcher}, which produces slightly different rankings than a row-by-row L2 distance loop for high-dimensional vectors. We added a manual nearest-neighbor matching mode that follows the original HPatches evaluation protocol exactly. All patch benchmark results in Chapter~\ref{chap:results} use this corrected matching unless otherwise noted.
 
 \subsubsection{Color HPatches Patch Benchmark}
 % DRAFTING: Complete re-implementation documentation
