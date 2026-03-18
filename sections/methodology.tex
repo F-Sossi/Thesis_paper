@@ -431,7 +431,7 @@ The primary metric for descriptor utility is Mean Average Precision (mAP) in an 
     \item Compute Average Precision (AP) as the area under the Precision-Recall curve.
 \end{enumerate}
 
-We report \textbf{True Macro mAP}: An Information Retrieval (IR) style metric where we compute AP per scene and average across scenes, ensuring that texture-poor scenes (with fewer keypoints) contribute equally. Crucially, we enforce a \textbf{Single Ground Truth (R=1)} policy: for a given keypoint in $I_A$, there is at most one correct match in $I_B$ (the nearest neighbor in the intersection set).
+We report \textbf{True Macro mAP}: An Information Retrieval (IR) style metric where we compute AP per scene and average across scenes, ensuring that texture-poor scenes (with fewer keypoints) contribute equally. We enforce a \textbf{Single Ground Truth (R=1)} policy: for a given keypoint in $I_A$, there is at most one correct match in $I_B$ (the nearest neighbor in the intersection set).
 
 % ============================================================================
 % DRAFTING: Detailed explanation of True mAP vs legacy precision

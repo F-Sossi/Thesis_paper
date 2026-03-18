@@ -123,10 +123,10 @@ We tested five hypotheses for the intersection gain:
     \item \textbf{Quality selection}: Intersection selects stronger keypoints (higher response)
     \item \textbf{Scale selection}: Intersection favors certain scale ranges
     \item \textbf{Spatial distribution}: Intersection removes clustered keypoints
-    \item \textbf{Detector agreement}: Keypoints where detectors agree are more repeatable
+    \item \textbf{Detector agreement}: Keypoints where detectors agree are more likely to be distinct structures.
 \end{enumerate}
 
-We created control keypoint sets: random subsets, top-N by response, top-N by scale, and spatially filtered sets---all matched to the intersection count (645K keypoints).
+We created control keypoint sets: random subsets, top-N by response, top-N by scale, and spatially filtered sets all matched to the intersection count (645K keypoints).
 
 \subsection{Key Finding: Keypoint Quality, Not Descriptor Distinctiveness}
 
@@ -147,7 +147,7 @@ The intersection filters for keypoints that are \textit{salient image features} 
 \begin{itemize}
     \item \textbf{Cross-validation}: If both a blob detector (KeyNet) and an edge/corner detector (SIFT) independently identify the same location as interesting, it likely corresponds to a real image structure.
 
-    \item \textbf{Repeatability}: Keypoints detected by multiple methods are more likely to be detected again under viewpoint/illumination changes---they are inherently more repeatable.
+    \item \textbf{Repeatability}: Keypoints detected by multiple methods are more likely to be detected again under viewpoint/illumination changes they are inherently more repeatable.
 
     \item \textbf{Noise rejection}: Detector-specific noise or false detections are unlikely to occur at the same spatial location across different detection methods.
 \end{itemize}

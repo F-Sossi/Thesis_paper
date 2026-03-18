@@ -122,7 +122,7 @@ Table~\ref{tab:intersection_analysis} shows that features detected by \textit{bo
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\textwidth]{intersection_progression.pdf}
-\caption{HardNet performance across keypoint filtering stages. Each successive filtering step---scale control and spatial intersection---provides cumulative improvement, demonstrating that keypoint quality is a dominant factor in matching performance.}
+\caption{HardNet performance across keypoint filtering stages. Each successive filtering step scale control and spatial intersection provides cumulative improvement, demonstrating that keypoint quality is a dominant factor in matching performance.}
 \label{fig:intersection_progression}
 \end{figure}
 
@@ -137,11 +137,11 @@ Table~\ref{tab:intersection_analysis} shows that features detected by \textit{bo
 %   Spatial distribution: analysis/scripts/analyze_keypoint_properties.py (analyze_spatial_distribution)
 %            SQL queries: intersection_mechanism_analysis.md Appendix A.4
 
-Given the substantial improvement from detector intersection (+18\% over baseline), we conducted additional analysis to understand the underlying mechanism and rule out potential artifacts.
+Given the substantial improvement from detector intersection (+18\% over baseline), we conducted additional analysis to understand the underlying mechanism and rule out potential causes.
 
 \textbf{Alternative hypotheses ruled out:}
 \begin{enumerate}
-    \item \textbf{Better repeatability}: Intersection keypoints actually have \textit{lower} repeatability (28.0\%) than scale-controlled keypoints (29.4\%). Paired t-test: $t=-4.28$, $p<0.0001$. The intersection benefit does not come from more stable detection.
+    \item \textbf{Better repeatability}: Intersection keypoints have slightly \textit{lower} repeatability (28.0\%) than scale-filtered keypoints (29.4\%). In a paired t-test, $t=-4.28$ and $p<0.0001$.
     % Source: investigation_2_repeatability_tracking.md
 
     \item \textbf{More distinctive descriptors}: When comparing only correct matches, the nearest-neighbor distance ratios are identical across keypoint sets ($\sim$0.44). The descriptors are equally distinctive; the difference lies in which keypoints are selected.
@@ -169,7 +169,7 @@ Given the substantial improvement from detector intersection (+18\% over baselin
 \textbf{Interpretation}: Detector consensus (SIFT $\cap$ KeyNet) selects locations where the local image structure is inherently unique---significant enough to trigger detection criteria in both a hand-crafted (SIFT) and learned (KeyNet) detector. These locations tend to avoid repetitive textures (bricks, tiles, windows) where many keypoints look similar, resulting in fewer ambiguous matches and higher precision.
 
 % ===================================================================
-\section{Descriptor Fusion Results}
+\section{Descriptor Fusion Results}%
 \label{sec:fusion_results}
 % ===================================================================
 
